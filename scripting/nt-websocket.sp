@@ -1,0 +1,513 @@
+/**
+ * Control chars:
+ * A:
+ * B:
+ * C: Player connected
+ * D: Player disconnected
+ * E: Player equipped weapon
+ * F:
+ * G:
+ * H: Player was hurt
+ * I: Initial child socket connect. Sends game and map
+ * J:
+ * K: Player died
+ * L:
+ * M: Map changed
+ * N: Player changed his name
+ * O:
+ * P:
+ * Q:
+ * R: Round start
+ * S: Player spawned
+ * T: Player changed team
+ * U:
+ * V: ConVar changed
+ * W: Player switched to weapon
+ * X: Chat message
+ * Y:
+ * Z:
+ */
+#pragma semicolon 1
+#include <sourcemod>
+#include <sdktools>
+#include <sdkhooks>
+#include <websocket>
+#include <neotokyo>
+
+#define PLUGIN_VERSION "1.0"
+
+#define NEO_MAX_CLIENTS 32
+
+new WebsocketHandle:g_hListenSocket = INVALID_WEBSOCKET_HANDLE;
+new Handle:g_hChildren;
+new Handle:g_hChildIP;
+
+new Handle:g_hostname;
+
+new g_iRoundNumber = -1;
+
+bool g_bWeaponEquipHook[NEO_MAX_CLIENTS + 1];
+bool g_bWeaponSwitchHook[NEO_MAX_CLIENTS + 1];
+
+public Plugin:myinfo =
+{
+	name = "Neotokyo WebSocket",
+	author = "Agiel",
+	description = "Neotokyo WebSocket relay. Based on Jannik \"Peace-Maker\" Hartung's SourceTV 2D Server",
+	version = PLUGIN_VERSION,
+	url = "http://www.wcfan.de/"
+}
+
+public OnPluginStart()
+{
+	g_hChildren = CreateArray();
+	g_hChildIP = CreateArray(ByteCountToCells(33));
+
+	AddCommandListener(CmdLstnr_Say, "say");
+
+	g_hostname = FindConVar("hostname");
+
+	HookEvent("player_team", Event_OnPlayerTeam);
+	HookEvent("player_death", Event_OnPlayerDeath);
+	HookEvent("player_spawn", Event_OnPlayerSpawn);
+	HookEvent("player_hurt", Event_OnPlayerHurt);
+	HookEvent("player_changename", Event_OnChangeName);
+
+	// Neotokyo
+	HookEventEx("game_round_start", Event_OnRoundStart);
+}
+
+public OnAllPluginsLoaded()
+{
+	decl String:sServerIP[40];
+	new longip = GetConVarInt(FindConVar("hostip")), pieces[4];
+	pieces[0] = (longip >> 24) & 0x000000FF;
+	pieces[1] = (longip >> 16) & 0x000000FF;
+	pieces[2] = (longip >> 8) & 0x000000FF;
+	pieces[3] = longip & 0x000000FF;
+	FormatEx(sServerIP, sizeof(sServerIP), "%d.%d.%d.%d", pieces[0], pieces[1], pieces[2], pieces[3]);
+	if(g_hListenSocket == INVALID_WEBSOCKET_HANDLE)
+		g_hListenSocket = Websocket_Open(sServerIP, 12346, OnWebsocketIncoming, OnWebsocketMasterError, OnWebsocketMasterClose);
+}
+
+public OnPluginEnd()
+{
+	if(g_hListenSocket != INVALID_WEBSOCKET_HANDLE)
+		Websocket_Close(g_hListenSocket);
+}
+
+public OnConfigsExecuted()
+{
+	// for late loading
+	for (int client = 1; client <= MaxClients; ++client)
+	{
+		if (!IsValidClient(client) || IsFakeClient(client))
+			continue;
+
+		if (!g_bWeaponSwitchHook[client])
+			g_bWeaponSwitchHook[client] = SDKHookEx(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
+		// if (!g_bWeaponEquipHook[client])
+			// g_bWeaponEquipHook[client] = SDKHookEx(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
+		// if (!g_bWeaponDropHook[client])
+		// 	g_bWeaponDropHook[client] = SDKHookEx(client, SDKHook_WeaponDropPost, Event_OnWeaponDrop);
+	}
+}
+
+public OnMapStart()
+{
+	new iSize = GetArraySize(g_hChildren);
+	if(iSize == 0)
+		return;
+
+	decl String:sBuffer[128];
+	GetCurrentMap(sBuffer, sizeof(sBuffer));
+	Format(sBuffer, sizeof(sBuffer), "M%s", sBuffer);
+
+	SendToAllChildren(sBuffer);
+}
+
+public bool:OnClientConnect(client, String:rejectmsg[], maxlen)
+{
+	if(IsFakeClient(client))
+		return true;
+
+	decl String:sIP[33], String:sSocketIP[33];
+	GetClientIP(client, sIP, sizeof(sIP));
+	new iSize = GetArraySize(g_hChildIP);
+	for(new i=0;i<iSize;i++)
+	{
+		GetArrayString(g_hChildIP, i, sSocketIP, sizeof(sSocketIP));
+		if(StrEqual(sIP, sSocketIP))
+		{
+			Websocket_UnhookChild(WebsocketHandle:GetArrayCell(g_hChildren, i));
+			RemoveFromArray(g_hChildIP, i);
+			RemoveFromArray(g_hChildren, i);
+			if(iSize == 1)
+				break;
+			i--;
+			iSize--;
+		}
+	}
+
+	return true;
+}
+
+public OnClientPutInServer(client)
+{
+	new iSize = GetArraySize(g_hChildren);
+	if(iSize == 0)
+		return;
+
+	decl String:sBuffer[128];
+	GetClientAuthId(client, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
+	Format(sBuffer, sizeof(sBuffer), "C%d:%s:%d:0:x:x:100:0:x:%N", GetClientUserId(client), sBuffer, GetClientTeam(client), client);
+
+	SendToAllChildren(sBuffer);
+
+	if (!g_bWeaponSwitchHook[client])
+		g_bWeaponSwitchHook[client] = SDKHookEx(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
+	// if (!g_bWeaponEquipHook[client])
+	// 	g_bWeaponEquipHook[client] = SDKHookEx(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
+}
+
+public OnClientDisconnect(client)
+{
+	if(IsClientInGame(client))
+	{
+		new iSize = GetArraySize(g_hChildren);
+		if(iSize == 0)
+			return;
+
+		decl String:sBuffer[20];
+		Format(sBuffer, sizeof(sBuffer), "D%d", GetClientUserId(client));
+
+		SendToAllChildren(sBuffer);
+	}
+
+	g_bWeaponEquipHook[client] = false;
+	g_bWeaponSwitchHook[client] = false;
+}
+
+public Event_OnPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new iSize = GetArraySize(g_hChildren);
+	if(iSize == 0)
+		return;
+
+	new userid = GetEventInt(event, "userid");
+	new team = GetEventInt(event, "team");
+
+	if(team == 0)
+		return;
+
+	decl String:sBuffer[10];
+	Format(sBuffer, sizeof(sBuffer), "T%d:%d", userid, team);
+
+	SendToAllChildren(sBuffer);
+}
+
+public Event_OnPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new iSize = GetArraySize(g_hChildren);
+	if(iSize == 0)
+		return;
+
+	new victim = GetEventInt(event, "userid");
+	new attacker = GetEventInt(event, "attacker");
+
+	new String:sBuffer[64];
+	GetEventString(event, "weapon", sBuffer, sizeof(sBuffer));
+	Format(sBuffer, sizeof(sBuffer), "K%d:%d:%s", victim, attacker, sBuffer);
+
+	SendToAllChildren(sBuffer);
+}
+
+public Event_OnPlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	int iSize = GetArraySize(g_hChildren);
+	if(iSize == 0)
+		return;
+
+	int userid = GetEventInt(event, "userid");
+	int client = GetClientOfUserId(userid);
+
+	if (GetClientTeam(client) < 2)
+		return;
+
+	int class = GetPlayerClass(client);
+
+	decl String:sBuffer[20];
+	Format(sBuffer, sizeof(sBuffer), "S%d:%d", userid, class);
+
+	SendToAllChildren(sBuffer);
+}
+
+public Event_OnPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new iSize = GetArraySize(g_hChildren);
+	if(iSize == 0)
+		return;
+
+	new userid = GetEventInt(event, "userid");
+
+	decl String:sBuffer[20];
+	Format(sBuffer, sizeof(sBuffer), "H%d:%d", userid, GetEventInt(event, "health"));
+
+	SendToAllChildren(sBuffer);
+}
+
+public Event_OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new iSize = GetArraySize(g_hChildren);
+	if(iSize == 0)
+		return;
+
+	g_iRoundNumber = GameRules_GetProp("m_iRoundNumber");
+
+	decl String:sBuffer[32];
+	Format(sBuffer, sizeof(sBuffer), "R%d", g_iRoundNumber);
+
+	SendToAllChildren(sBuffer);
+}
+
+public Event_OnChangeName(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new iSize = GetArraySize(g_hChildren);
+	if(iSize == 0)
+		return;
+
+	new userid = GetEventInt(event, "userid");
+	decl String:sOldName[MAX_NAME_LENGTH];
+	decl String:sNewName[MAX_NAME_LENGTH];
+	GetEventString(event, "oldname", sOldName, sizeof(sOldName));
+	GetEventString(event, "newname", sNewName, sizeof(sNewName));
+
+	if(StrEqual(sNewName, sOldName))
+		return;
+
+	decl String:sBuffer[MAX_NAME_LENGTH+10];
+	Format(sBuffer, sizeof(sBuffer), "N%d:%s", userid, sNewName);
+
+	SendToAllChildren(sBuffer);
+}
+
+public void Event_OnWeaponEquip(int client, int weapon)
+{
+	int userid = GetClientUserId(client);
+
+	char weaponName[20];
+	GetEntityClassname(weapon, weaponName, sizeof(weaponName));
+
+	char sBuffer[32];
+	Format(sBuffer, sizeof(sBuffer), "E%d:%s", userid, weaponName);
+
+	SendToAllChildren(sBuffer);
+}
+
+public void Event_OnWeaponSwitch_Post(int client, int weapon)
+{
+	int userid = GetClientUserId(client);
+
+	char weaponName[20];
+	GetEntityClassname(weapon, weaponName, sizeof(weaponName));
+
+	char sBuffer[32];
+	Format(sBuffer, sizeof(sBuffer), "W%d:%s", userid, weaponName);
+
+	SendToAllChildren(sBuffer);
+}
+
+public Action:CmdLstnr_Say(client, const String:command[], argc)
+{
+	decl String:sBuffer[128];
+	GetCmdArgString(sBuffer, sizeof(sBuffer));
+
+	StripQuotes(sBuffer);
+	if(strlen(sBuffer) == 0)
+		return Plugin_Continue;
+
+	// Send console messages either.
+	new userid = 0;
+	if(client)
+		userid = GetClientUserId(client);
+
+	Format(sBuffer, sizeof(sBuffer), "X%d:%s", userid, sBuffer);
+
+	new iSize = GetArraySize(g_hChildren);
+	for(new i=0;i<iSize;i++)
+		Websocket_Send(GetArrayCell(g_hChildren, i), SendType_Text, sBuffer);
+
+	return Plugin_Continue;
+}
+
+public Action:OnWebsocketIncoming(WebsocketHandle:websocket, WebsocketHandle:newWebsocket, const String:remoteIP[], remotePort, String:protocols[256])
+{
+	// Make sure there's no ghosting!
+	decl String:sIP[33];
+	for(new i=1;i<=MaxClients;i++)
+	{
+		if(IsClientInGame(i) && !IsFakeClient(i))
+		{
+			GetClientIP(i, sIP, sizeof(sIP));
+			if(StrEqual(sIP, remoteIP))
+				return Plugin_Stop;
+		}
+	}
+
+	Websocket_HookChild(newWebsocket, OnWebsocketReceive, OnWebsocketDisconnect, OnChildWebsocketError);
+	Websocket_HookReadyStateChange(newWebsocket, OnWebsocketReadyStateChanged);
+	PushArrayCell(g_hChildren, newWebsocket);
+	PushArrayString(g_hChildIP, remoteIP);
+	return Plugin_Continue;
+}
+
+public OnWebsocketReadyStateChanged(WebsocketHandle:websocket, WebsocketReadyState:readystate)
+{
+	new iIndex = FindValueInArray(g_hChildren, websocket);
+	if(iIndex == -1)
+		return;
+
+	if(readystate != State_Open)
+		return;
+
+	decl String:sMap[64], String:sGameFolder[64], String:sBuffer[256], String:sTeam1[32], String:sTeam2[32], String:sHostName[128];
+	GetCurrentMap(sMap, sizeof(sMap));
+	GetGameFolderName(sGameFolder, sizeof(sGameFolder));
+	GetTeamName(2, sTeam1, sizeof(sTeam1));
+	GetTeamName(3, sTeam2, sizeof(sTeam2));
+	GetConVarString(g_hostname, sHostName, sizeof(sHostName));
+	Format(sBuffer, sizeof(sBuffer), "I%s:%s:%s:%s:%s", sGameFolder, sMap, sTeam1, sTeam2, sHostName);
+
+	Websocket_Send(websocket, SendType_Text, sBuffer);
+
+	if(g_iRoundNumber != -1)
+	{
+		Format(sBuffer, sizeof(sBuffer), "R%d", g_iRoundNumber);
+		Websocket_Send(websocket, SendType_Text, sBuffer);
+	}
+
+	// Inform others there's another spectator!
+	Format(sBuffer, sizeof(sBuffer), "A%d", GetArraySize(g_hChildren));
+	new iSize = GetArraySize(g_hChildren);
+	new WebsocketHandle:hHandle;
+	for(new i=0;i<iSize;i++)
+	{
+		hHandle = WebsocketHandle:GetArrayCell(g_hChildren, i);
+		if(Websocket_GetReadyState(hHandle) == State_Open)
+			Websocket_Send(hHandle, SendType_Text, sBuffer);
+	}
+
+	// Add all players to it's list
+	for(new i=1;i<=MaxClients;i++)
+	{
+		if(IsClientInGame(i))
+		{
+			GetClientAuthId(i, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
+			Format(sBuffer, sizeof(sBuffer), "C%d:%s:%d:%d:%d:%d:%d:%d:x:%N", GetClientUserId(i), sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientFrags(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), i);
+
+			Websocket_Send(websocket, SendType_Text, sBuffer);
+		}
+	}
+
+	return;
+}
+
+public OnWebsocketMasterError(WebsocketHandle:websocket, const errorType, const errorNum)
+{
+	LogError("MASTER SOCKET ERROR: handle: %d type: %d, errno: %d", _:websocket, errorType, errorNum);
+	g_hListenSocket = INVALID_WEBSOCKET_HANDLE;
+}
+
+public OnWebsocketMasterClose(WebsocketHandle:websocket)
+{
+	g_hListenSocket = INVALID_WEBSOCKET_HANDLE;
+}
+
+public OnChildWebsocketError(WebsocketHandle:websocket, const errorType, const errorNum)
+{
+	LogError("CHILD SOCKET ERROR: handle: %d, type: %d, errno: %d", _:websocket, errorType, errorNum);
+	new iIndex = FindValueInArray(g_hChildren, websocket);
+	RemoveFromArray(g_hChildren, iIndex);
+	RemoveFromArray(g_hChildIP, iIndex);
+
+	// Inform others there's one spectator less!
+	decl String:sBuffer[10];
+	Format(sBuffer, sizeof(sBuffer), "A%d", GetArraySize(g_hChildren));
+	SendToAllChildren(sBuffer);
+}
+
+public OnWebsocketReceive(WebsocketHandle:websocket, WebsocketSendType:iType, const String:receiveData[], const dataSize)
+{
+	if(iType != SendType_Text)
+		return;
+
+	decl String:sBuffer[dataSize+4];
+	Format(sBuffer, dataSize+4, "Z%s", receiveData);
+
+	new iSize = GetArraySize(g_hChildren);
+	new WebsocketHandle:hHandle;
+	for(new i=0;i<iSize;i++)
+	{
+		hHandle = WebsocketHandle:GetArrayCell(g_hChildren, i);
+		if(hHandle != websocket && Websocket_GetReadyState(hHandle) == State_Open)
+			Websocket_Send(hHandle, SendType_Text, sBuffer);
+	}
+}
+
+public OnWebsocketDisconnect(WebsocketHandle:websocket)
+{
+	new iIndex = FindValueInArray(g_hChildren, websocket);
+	RemoveFromArray(g_hChildren, iIndex);
+	RemoveFromArray(g_hChildIP, iIndex);
+
+	// Inform others there's one spectator less!
+	decl String:sBuffer[10];
+	Format(sBuffer, sizeof(sBuffer), "A%d", GetArraySize(g_hChildren));
+	SendToAllChildren(sBuffer);
+}
+
+SendToAllChildren(const String:sData[])
+{
+	new iSize = GetArraySize(g_hChildren);
+	new WebsocketHandle:hHandle;
+	for(new i=0;i<iSize;i++)
+	{
+		hHandle = WebsocketHandle:GetArrayCell(g_hChildren, i);
+		if(Websocket_GetReadyState(hHandle) == State_Open)
+			Websocket_Send(hHandle, SendType_Text, sData);
+	}
+}
+
+stock UTF8_Encode(const String:sText[], String:sReturn[], const maxlen)
+{
+	new iStrLenI = strlen(sText);
+	new iStrLen = 0;
+	for(new i=0;i<iStrLenI;i++)
+	{
+		iStrLen += GetCharBytes(sText[i]);
+	}
+
+	decl String:sBuffer[iStrLen+1];
+
+	new i = 0;
+	for(new w=0;w<iStrLenI;w++)
+	{
+		if(sText[w] < 0x80)
+		{
+			sBuffer[i++] = sText[w];
+		}
+		else if(sText[w] < 0x800)
+		{
+			sBuffer[i++] = 0xC0 | sText[w] >> 6;
+			sBuffer[i++] = 0x80 | sText[w] & 0x3F;
+		}
+		else if(sText[w] < 0x10000)
+		{
+			sBuffer[i++] = 0xE0 | sText[w] >> 12;
+			sBuffer[i++] = 0x80 | sText[w] >> 6 & 0x3F;
+			sBuffer[i++] = 0x80 | sText[w] & 0x3F;
+		}
+	}
+	sBuffer[i] = '\0';
+	strcopy(sReturn, maxlen, sBuffer);
+}
