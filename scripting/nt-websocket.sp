@@ -1,3 +1,16 @@
+// TODO:
+
+// Player equip/drop to keep track of player inventory
+// Does throwing grenade trigger drop?
+
+// Separate XP, frags and assists? Might be hard to keep in sync with the comp plugin shenanigans.
+
+// Map vetos
+
+// Track spectated player
+
+// Track shooting players
+
 /**
  * Control chars:
  * A:
@@ -15,7 +28,7 @@
  * M: Map changed
  * N: Player changed his name
  * O:
- * P:
+ * P: Player score changed
  * Q:
  * R: Round start
  * S: Player spawned
@@ -46,8 +59,9 @@ new Handle:g_hostname;
 
 new g_iRoundNumber = -1;
 
-bool g_bWeaponEquipHook[NEO_MAX_CLIENTS + 1];
-bool g_bWeaponSwitchHook[NEO_MAX_CLIENTS + 1];
+int g_playerXP[NEO_MAX_CLIENTS + 1];
+int g_playerDeaths[NEO_MAX_CLIENTS + 1];
+char g_playerActiveWeapon[NEO_MAX_CLIENTS + 1][20];
 
 public Plugin:myinfo =
 {
@@ -75,6 +89,15 @@ public OnPluginStart()
 
 	// Neotokyo
 	HookEventEx("game_round_start", Event_OnRoundStart);
+
+	// Hook again if plugin is restarted
+	for(int client = 1; client <= MaxClients; client++)
+	{
+		if(IsValidClient(client))
+		{
+			OnClientPutInServer(client);
+		}
+	}
 }
 
 public OnAllPluginsLoaded()
@@ -96,20 +119,24 @@ public OnPluginEnd()
 		Websocket_Close(g_hListenSocket);
 }
 
-public OnConfigsExecuted()
+public Action CheckScores(Handle timer)
 {
-	// for late loading
-	for (int client = 1; client <= MaxClients; ++client)
+	for(new i=1;i<=MaxClients;i++)
 	{
-		if (!IsValidClient(client) || IsFakeClient(client))
-			continue;
+		if(IsClientInGame(i))
+		{
+			int xp = GetClientFrags(i);
+			int deaths = GetClientDeaths(i);
 
-		if (!g_bWeaponSwitchHook[client])
-			g_bWeaponSwitchHook[client] = SDKHookEx(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
-		// if (!g_bWeaponEquipHook[client])
-			// g_bWeaponEquipHook[client] = SDKHookEx(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
-		// if (!g_bWeaponDropHook[client])
-		// 	g_bWeaponDropHook[client] = SDKHookEx(client, SDKHook_WeaponDropPost, Event_OnWeaponDrop);
+			if (g_playerXP[i] != xp || g_playerDeaths[i] != deaths)
+			{
+				g_playerXP[i] = xp;
+				g_playerDeaths[i] = deaths;
+				char sBuffer[128];
+				Format(sBuffer, sizeof(sBuffer), "P%d:%d:%d", GetClientUserId(i), xp, deaths);
+				SendToAllChildren(sBuffer);
+			}
+		}
 	}
 }
 
@@ -154,20 +181,21 @@ public bool:OnClientConnect(client, String:rejectmsg[], maxlen)
 
 public OnClientPutInServer(client)
 {
+	g_playerXP[client] = GetClientFrags(client);
+	g_playerDeaths[client] = GetClientDeaths(client);
+
+	SDKHook(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
+	//SDKHook(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
+
 	new iSize = GetArraySize(g_hChildren);
 	if(iSize == 0)
 		return;
 
 	decl String:sBuffer[128];
 	GetClientAuthId(client, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
-	Format(sBuffer, sizeof(sBuffer), "C%d:%s:%d:0:x:x:100:0:x:%N", GetClientUserId(client), sBuffer, GetClientTeam(client), client);
+	Format(sBuffer, sizeof(sBuffer), "C%d:%s:%d:0:0:0:100:0::%N", GetClientUserId(client), sBuffer, GetClientTeam(client), client);
 
 	SendToAllChildren(sBuffer);
-
-	if (!g_bWeaponSwitchHook[client])
-		g_bWeaponSwitchHook[client] = SDKHookEx(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
-	// if (!g_bWeaponEquipHook[client])
-	// 	g_bWeaponEquipHook[client] = SDKHookEx(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
 }
 
 public OnClientDisconnect(client)
@@ -184,8 +212,13 @@ public OnClientDisconnect(client)
 		SendToAllChildren(sBuffer);
 	}
 
-	g_bWeaponEquipHook[client] = false;
-	g_bWeaponSwitchHook[client] = false;
+	g_playerXP[client] = 0;
+	g_playerDeaths[client] = 0;
+}
+
+public OnGhostCapture(client)
+{
+	CreateTimer(0.1, CheckScores);
 }
 
 public Event_OnPlayerTeam(Handle:event, const String:name[], bool:dontBroadcast)
@@ -220,6 +253,8 @@ public Event_OnPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast
 	Format(sBuffer, sizeof(sBuffer), "K%d:%d:%s", victim, attacker, sBuffer);
 
 	SendToAllChildren(sBuffer);
+
+	CreateTimer(0.1, CheckScores);
 }
 
 public Event_OnPlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast)
@@ -268,6 +303,8 @@ public Event_OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	Format(sBuffer, sizeof(sBuffer), "R%d", g_iRoundNumber);
 
 	SendToAllChildren(sBuffer);
+
+	CreateTimer(0.1, CheckScores);
 }
 
 public Event_OnChangeName(Handle:event, const String:name[], bool:dontBroadcast)
@@ -310,6 +347,7 @@ public void Event_OnWeaponSwitch_Post(int client, int weapon)
 
 	char weaponName[20];
 	GetEntityClassname(weapon, weaponName, sizeof(weaponName));
+	g_playerActiveWeapon[client] = weaponName;
 
 	char sBuffer[32];
 	Format(sBuffer, sizeof(sBuffer), "W%d:%s", userid, weaponName);
@@ -403,7 +441,7 @@ public OnWebsocketReadyStateChanged(WebsocketHandle:websocket, WebsocketReadySta
 		if(IsClientInGame(i))
 		{
 			GetClientAuthId(i, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
-			Format(sBuffer, sizeof(sBuffer), "C%d:%s:%d:%d:%d:%d:%d:%d:x:%N", GetClientUserId(i), sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientFrags(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), i);
+			Format(sBuffer, sizeof(sBuffer), "C%d:%s:%d:%d:%d:%d:%d:%d:%s:%N", GetClientUserId(i), sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientFrags(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), g_playerActiveWeapon[i], i);
 
 			Websocket_Send(websocket, SendType_Text, sBuffer);
 		}
