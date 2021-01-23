@@ -23,9 +23,9 @@ const uidToPlayer = {};
 
 function debounce(func, wait, immediate) {
 	var timeout;
-	return () => {
+	return function() {
 		var context = this, args = arguments;
-		var later = () => {
+		var later = function() {
 			timeout = null;
 			if (!immediate) func.apply(context, args);
 		};
@@ -51,12 +51,14 @@ async function getAvatarURLs(players) {
 }
 
 const toLookUp = [];
+const getAvatarURLsDebounced = debounce(getAvatarURLs, 100);
+
 function getAvatarURL(player) {
     if (isNaN(parseInt(player.steamId)))
         return;
 
     toLookUp.push(player);
-    debounce(getAvatarURLs(toLookUp, 100));
+    getAvatarURLsDebounced(toLookUp);
 }
 
 async function handleMessage(data) {
