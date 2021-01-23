@@ -82,6 +82,11 @@ async function handleMessage(data) {
                 name: parts[9],
             });
 
+            if (!player.isAlive) {
+                // Server reports dead players with hp 1, so set to 0
+                player.health = 0;
+            }
+
             uidToPlayer[player.userId] = player;
             store.players.push(player);
 

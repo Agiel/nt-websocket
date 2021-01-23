@@ -4,7 +4,7 @@
     <img class="dead-icon" src="icons/dead.png" v-if="!data.isAlive && !data.isSpawning">
     <div class="info flex">
       <div class="health-bar-container flex">
-        <div class="health-bar health-bar-dmg" :style="{ width: data.health + '%' }" v-if="data.isAlive"></div>
+        <div class="health-bar health-bar-dmg" :style="{ width: data.health + '%' }" v-if="!data.isSpawning"></div>
       </div>
       <div class="health-bar-container flex">
         <div class="health-bar bg-color" :style="{ width: data.health + '%' }" v-if="data.isAlive"></div>
@@ -148,7 +148,7 @@ export default {
   left: 0px;
   padding: 2px;
   box-sizing: border-box;
-  filter: brightness(80%);
+  filter: brightness(75%);
 }
 
 .health-bar {
