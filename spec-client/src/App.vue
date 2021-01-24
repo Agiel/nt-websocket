@@ -1,12 +1,22 @@
 <template>
-  <div id="round-counter">Round {{roundCount}}</div>
-  <div id="container">
-    <div id="jinrai">
-      <PlayerPanel v-for="player in jinrai" :data="player" :key="player.userId"></PlayerPanel>
-    </div>
-    <div id="spacer"></div>
-    <div id="nsf">
-      <PlayerPanel v-for="player in nsf" :data="player" :key="player.userId"></PlayerPanel>
+  <div>
+    <div id="round-counter">Round {{roundCount}}</div>
+    <div id="container">
+      <div id="jinrai">
+        <PlayerPanel v-for="player in jinrai"
+          :data="player"
+          :key="player.userId"
+          :highlight="player.clientId == observerTarget"
+        ></PlayerPanel>
+      </div>
+      <div id="spacer"></div>
+      <div id="nsf">
+        <PlayerPanel v-for="player in nsf"
+          :data="player"
+          :key="player.userId"
+          :highlight="player.clientId == observerTarget"
+        ></PlayerPanel>
+      </div>
     </div>
   </div>
 </template>
@@ -20,7 +30,7 @@ export default {
   name: 'App',
   computed: {
     players() {
-      return store.players;
+      return store.players.sort((a, b) => +a.clientId - b.clientId);
     },
     jinrai() {
       return this.players.filter((player) => player.team == "Jinrai");
@@ -30,6 +40,9 @@ export default {
     },
     roundCount() {
       return +store.roundNumber + 1;
+    },
+    observerTarget() {
+      return store.observerTarget;
     }
   },
   components: {
@@ -53,7 +66,7 @@ body {
 }
 
 #container {
-  margin-top: 400px;
+  margin-top: 300px;
   display: flex;
 }
 

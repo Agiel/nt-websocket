@@ -1,7 +1,12 @@
 <template>
-  <div class="player-panel flex" :class="{ 'dead-flash': !data.isAlive && !data.isSpawning }">
-    <img class="avatar" :class="{ dead: !data.isAlive && !data.isSpawning }" :src="data.avatar">
-    <img class="dead-icon" src="icons/dead.png" v-if="!data.isAlive && !data.isSpawning">
+  <div class="player-panel flex" :class="{
+    'dead-flash': !data.isAlive && !data.isSpawning,
+    'highlight': highlight
+  }">
+    <div class="avatar-container">
+      <img class="dead-icon" src="icons/dead.png" v-if="!data.isAlive && !data.isSpawning">
+      <img class="avatar" :class="{ dead: !data.isAlive && !data.isSpawning }" :src="data.avatar">
+    </div>
     <div class="info flex">
       <div class="health-bar-container flex">
         <div class="health-bar health-bar-dmg" :style="{ width: data.health + '%' }" v-if="!data.isSpawning"></div>
@@ -10,15 +15,20 @@
         <div class="health-bar bg-color" :style="{ width: data.health + '%' }" v-if="data.isAlive"></div>
       </div>
       <div class="name">{{data.name}}</div>
-      <div class="health">{{health}}</div>
-      <div class="class align">{{className}}</div>
+      <div class="health align">{{health}}</div>
+
       <div class="break"></div>
       <div class="stats">
-        <img class="xp-icon" :src="'icons/' + rank + '.png'">
+        <div class="icon-container">
+          <img class="xp-icon" :src="'icons/' + rank + '.png'">
+        </div>
         <div class="xp">{{data.xp}}</div>
-        <img class="deaths-icon" src="icons/skull.png">
+        <div class="icon-container">
+          <img class="deaths-icon" src="icons/skull.png">
+        </div>
         <div class="deaths">{{data.deaths}}</div>
       </div>
+      <div class="class">{{className}}</div>
       <div class="spacer"></div>
       <img class="weapon-icon" v-if="data.isAlive && data.activeWeapon" :src="'icons/' + data.activeWeapon + '.png'">
     </div>
@@ -29,23 +39,24 @@
 export default {
   name: 'PlayerPanel',
   props: {
-    data: Object
+    data: Object,
+    highlight: Boolean,
   },
   computed: {
     health() {
       if (this.data.isAlive) {
         return this.data.health;
-      } else {
+      } else if (this.data.isSpawning) {
         return "";
+      } else {
+        return "Dead";
       }
     },
     className() {
       if (this.data.isAlive) {
         return this.data.class;
-      } else if (this.data.isSpawning) {
-        return "";
       } else {
-        return "Dead";
+        return "";
       }
     },
     rank() {
@@ -68,17 +79,21 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .player-panel {
-  position: relative;
   font-weight: bold;
-  /* border: 1px solid black; */
   display: flex;
   overflow: hidden;
   margin: 2px 0;
+  padding: 2px;
   width: 420px;
   color: white;
   text-shadow: 1px 1px 2px #222;
   background-color: rgba(0,0,0,0.5);
   box-sizing: border-box;
+}
+
+.player-panel.highlight {
+  border: 2px solid rgba(255,255,255,0.8);
+  padding: 0;
 }
 
 .break {
@@ -90,22 +105,27 @@ export default {
   flex: 1 1 auto;
 }
 
+.avatar-container {
+  flex: 0 0 auto;
+  height: 64px;
+  width: 66px;
+}
+
 .avatar {
   width: 64px;
   height: 64px;
-  flex: 0 0 auto;
-  margin: 2px;
 }
 
 .dead {
-  filter: sepia(100%) hue-rotate(310deg) saturate(600%) brightness(50%);
+  /* filter: sepia(100%) hue-rotate(310deg) saturate(600%) brightness(50%); */
+  filter: grayscale();
 }
 
 .dead-icon {
   position: absolute;
-  height: 68px;
-  padding: 2px;
-  box-sizing: border-box;
+  height: 64px;
+  z-index: 100;
+  background-color: rgba(255,0,0,0.3);
 }
 
 .info {
@@ -114,7 +134,7 @@ export default {
   flex-wrap: wrap;
   align-items: center;
   box-sizing: border-box;
-  padding: 6px 12px;
+  padding: 4px 12px;
   position: relative;
   z-index: 10;
 }
@@ -128,9 +148,12 @@ export default {
 }
 
 .class {
-  width: 60px;
+  width: 80px;
   font-size: 14px;
   color: #eee;
+  align-self: flex-end;
+  padding-bottom: 3px;
+  text-align: center;
 }
 
 .health {
@@ -146,7 +169,6 @@ export default {
   height: 100%;
   width: 100%;
   left: 0px;
-  padding: 2px;
   box-sizing: border-box;
   filter: brightness(75%);
 }
@@ -169,10 +191,16 @@ export default {
   align-self: flex-end;
 }
 
-.xp-icon, .deaths-icon {
+.icon-container {
+  width: 18px;
   height: 18px;
   margin: 0 6px;
   align-self: center;
+  text-align: right;
+}
+
+.xp-icon, .deaths-icon {
+  height: 18px;
 }
 
 .xp, .deaths {
@@ -186,7 +214,8 @@ export default {
 }
 
 .weapon-icon {
-  height: 22px;
+  max-height: 22px;
+  max-width: 100px;
   position: relative;
   top: 2px;
 }

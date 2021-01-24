@@ -7,9 +7,9 @@
 
 // Map vetos
 
-// Track spectated player
-
 // Track shooting players
+
+// Players "spawning" mid round, usually after switching team, are reported as alive even if they're dead.
 
 /**
  * Control chars:
@@ -27,7 +27,7 @@
  * L:
  * M: Map changed
  * N: Player changed his name
- * O:
+ * O: Observer target changed
  * P: Player score changed
  * Q:
  * R: Round start
@@ -47,7 +47,7 @@
 #include <websocket>
 #include <neotokyo>
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.1"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -62,6 +62,9 @@ new g_iRoundNumber = -1;
 int g_playerXP[NEO_MAX_CLIENTS + 1];
 int g_playerDeaths[NEO_MAX_CLIENTS + 1];
 char g_playerActiveWeapon[NEO_MAX_CLIENTS + 1][20];
+
+int g_currentObserver = 0;
+int g_currentObserverTarget = 0;
 
 public Plugin:myinfo =
 {
@@ -80,6 +83,8 @@ public OnPluginStart()
 	AddCommandListener(CmdLstnr_Say, "say");
 
 	g_hostname = FindConVar("hostname");
+
+	RegConsoleCmd("sm_setobserver", OnSetObserver, "Set current observer for spectator overlay");
 
 	HookEvent("player_team", Event_OnPlayerTeam);
 	HookEvent("player_death", Event_OnPlayerDeath);
@@ -117,6 +122,37 @@ public OnPluginEnd()
 {
 	if(g_hListenSocket != INVALID_WEBSOCKET_HANDLE)
 		Websocket_Close(g_hListenSocket);
+}
+
+public Action OnSetObserver(int client, int args)
+{
+	g_currentObserver = client;
+	CreateTimer(0.1, CheckObserverTarget, _, TIMER_REPEAT);
+}
+
+public Action CheckObserverTarget(Handle timer)
+{
+	int target = 0;
+
+	if (g_currentObserver != 0 && IsClientInGame(g_currentObserver))
+	{
+		int mode = GetEntProp(g_currentObserver, Prop_Send, "m_iObserverMode");
+		target = mode == 4 ? GetEntPropEnt(g_currentObserver, Prop_Send, "m_hObserverTarget") : 0;
+	}
+
+	if (target != g_currentObserverTarget)
+	{
+		g_currentObserverTarget = target;
+		char sBuffer[128];
+		Format(sBuffer, sizeof(sBuffer), "O%d", target);
+		SendToAllChildren(sBuffer);
+	}
+
+	if (g_currentObserver == 0) {
+		return Plugin_Stop;
+	}
+
+	return Plugin_Continue;
 }
 
 public Action CheckScores(Handle timer)
@@ -193,7 +229,7 @@ public OnClientPutInServer(client)
 
 	decl String:sBuffer[128];
 	GetClientAuthId(client, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
-	Format(sBuffer, sizeof(sBuffer), "C%d:%s:%d:0:0:0:100:0::%N", GetClientUserId(client), sBuffer, GetClientTeam(client), client);
+	Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:0:0:0:100:0::%N", GetClientUserId(client), client, sBuffer, GetClientTeam(client), client);
 
 	SendToAllChildren(sBuffer);
 }
@@ -210,6 +246,11 @@ public OnClientDisconnect(client)
 		Format(sBuffer, sizeof(sBuffer), "D%d", GetClientUserId(client));
 
 		SendToAllChildren(sBuffer);
+	}
+
+	if (client == g_currentObserver)
+	{
+		g_currentObserver = 0;
 	}
 
 	g_playerXP[client] = 0;
@@ -272,7 +313,7 @@ public Event_OnPlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast
 	int class = GetPlayerClass(client);
 
 	decl String:sBuffer[20];
-	Format(sBuffer, sizeof(sBuffer), "S%d:%d", userid, class);
+	Format(sBuffer, sizeof(sBuffer), "S%d:%d:%d", userid, class, IsPlayerAlive(client));
 
 	SendToAllChildren(sBuffer);
 }
@@ -441,7 +482,7 @@ public OnWebsocketReadyStateChanged(WebsocketHandle:websocket, WebsocketReadySta
 		if(IsClientInGame(i))
 		{
 			GetClientAuthId(i, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
-			Format(sBuffer, sizeof(sBuffer), "C%d:%s:%d:%d:%d:%d:%d:%d:%s:%N", GetClientUserId(i), sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientFrags(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), g_playerActiveWeapon[i], i);
+			Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:%d:%d:%d:%d:%d:%s:%N", GetClientUserId(i), i, sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientFrags(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), g_playerActiveWeapon[i], i);
 
 			Websocket_Send(websocket, SendType_Text, sBuffer);
 		}

@@ -17,6 +17,7 @@ const CLASSES = [
 const store = reactive({
     players: [],
     roundNumber: 0,
+    observerTarget: 0,
 });
 
 const uidToPlayer = {};
@@ -70,16 +71,17 @@ async function handleMessage(data) {
         case 'C': {
             const player = reactive({
                 userId: parts[0],
-                steamId: parts[1],
-                team: TEAMS[parts[2]],
-                isAlive: !!+parts[3],
+                clientId: parts[1],
+                steamId: parts[2],
+                team: TEAMS[parts[3]],
+                isAlive: !!+parts[4],
                 isSpawning: false,
-                xp: parts[4],
-                deaths: parts[5],
-                health: parts[6],
-                class: CLASSES[parts[7]],
-                activeWeapon: parts[8].slice(7),
-                name: parts[9],
+                xp: parts[5],
+                deaths: parts[6],
+                health: parts[7],
+                class: CLASSES[parts[8]],
+                activeWeapon: parts[9].slice(7),
+                name: parts[10],
             });
 
             if (!player.isAlive) {
@@ -134,6 +136,11 @@ async function handleMessage(data) {
             const player = uidToPlayer[parts[0]];
             player.name = parts[1];
 
+            break;
+        }
+        // * O: Observer target changed
+        case 'O': {
+            store.observerTarget = parts[0];
             break;
         }
         // * P: Player score changed
