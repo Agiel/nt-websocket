@@ -159,9 +159,16 @@ async function handleMessage(data) {
         case 'S': {
             const player = uidToPlayer[parts[0]];
             player.class = CLASSES[parts[1]];
-            player.isAlive = player.class != "None";
+
+            if (player.class == "None") {
+                // Player joined mid-round
+                player.isAlive = false;
+                player.health = 0;
+            } else {
+                player.isAlive = true;
+                player.health = 100;
+            }
             player.isSpawning = false;
-            player.health = 100;
 
             break;
         }
