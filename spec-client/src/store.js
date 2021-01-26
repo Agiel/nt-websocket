@@ -40,6 +40,8 @@ function debounce(func, wait, immediate) {
 async function getAvatarURLs(players) {
     const steamIds = players.map((player) => player.steamId, []).join();
     try {
+
+        //const res = await fetch('http://' + window.location.hostname + ':3000/avatar/' + steamIds);
         const res = await fetch('/avatar/' + steamIds);
         const data = await res.json();
         while (players.length > 0) {
@@ -195,7 +197,7 @@ async function handleMessage(data) {
         }
     }
 
-    //console.log(data);
+    // console.log(data);
 }
 
 function connect(ip) {

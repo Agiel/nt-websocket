@@ -3,9 +3,9 @@
     'dead-flash': !data.isAlive && !data.isSpawning,
     'highlight': highlight
   }">
-    <div class="avatar-container">
+    <div class="avatar-container flex">
+      <div class="avatar" :class="{ dead: !data.isAlive && !data.isSpawning}" :style="{ 'background-image': 'url(' + data.avatar + ')' }"></div>
       <img class="dead-icon" src="icons/dead.png" v-if="!data.isAlive && !data.isSpawning">
-      <img class="avatar" :class="{ dead: !data.isAlive && !data.isSpawning }" :src="data.avatar">
     </div>
     <div class="info flex">
       <div class="health-bar-container flex">
@@ -106,6 +106,7 @@ export default {
 }
 
 .avatar-container {
+  display: flex;
   flex: 0 0 auto;
   height: 64px;
   width: 66px;
@@ -117,15 +118,15 @@ export default {
 }
 
 .dead {
-  /* filter: sepia(100%) hue-rotate(310deg) saturate(600%) brightness(50%); */
-  filter: grayscale();
+  background-color: red;
+  background-blend-mode: luminosity;
+  filter: brightness(50%) contrast(150%);
 }
 
 .dead-icon {
   position: absolute;
   height: 64px;
   z-index: 100;
-  background-color: rgba(255,0,0,0.3);
 }
 
 .info {
@@ -192,19 +193,25 @@ export default {
 }
 
 .icon-container {
-  width: 18px;
-  height: 18px;
-  margin: 0 6px;
+  display: flex;
+  width: 22px;
+  height: 22px;
   align-self: center;
-  text-align: right;
+  align-items: center;
+  justify-content: right;
 }
 
-.xp-icon, .deaths-icon {
+.xp-icon {
+  height: 22px;
+}
+
+.deaths-icon {
   height: 18px;
 }
 
 .xp, .deaths {
   width: 36px;
+  margin: 0 6px;
   text-align: left;
 }
 
