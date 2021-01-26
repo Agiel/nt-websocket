@@ -137,7 +137,7 @@ export default {
 }
 
 .name {
-  font-size: 16px;
+  font-size: 15px;
   flex: 1 0 160px;
   white-space: nowrap;
   overflow: hidden;
@@ -146,8 +146,8 @@ export default {
 
 .class {
   width: 104px;
-  font-size: 14px;
-  color: #eee;
+  font-size: 12px;
+  color: #ddd;
   align-self: flex-end;
   padding-bottom: 3px;
   text-align: center;
@@ -202,6 +202,7 @@ export default {
 .xp, .deaths {
   width: 24px;
   text-align: left;
+  color: #ccc;
 }
 
 .xp {
