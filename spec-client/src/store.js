@@ -116,6 +116,14 @@ async function handleMessage(data) {
             break;
         }
         // * E: Player equipped weapon
+        // * F: Player fired gun
+        case 'F': {
+            const player = uidToPlayer[parts[0]];
+            player.isFiring = true;
+            setTimeout(() => player.isFiring = false, 10);
+
+            break;
+        }
         // * H: Player was hurt
         case 'H': {
             const player = uidToPlayer[parts[0]];

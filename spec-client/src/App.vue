@@ -53,7 +53,7 @@ export default {
 
 <style>
 body {
-    background-color: #666;
+    background-color: #222;
     width: 1920px;
 }
 #app {

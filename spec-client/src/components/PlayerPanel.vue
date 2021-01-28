@@ -28,6 +28,8 @@
       <div class="spacer"></div>
       <img class="weapon-icon" v-if="data.isAlive && data.activeWeapon" :src="'icons/' + data.activeWeapon + '.png'">
     </div>
+    <div class="muzzleflash" :class="{ firing: data.isFiring }">
+    </div>
 </div>
 </template>
 
@@ -77,7 +79,6 @@ export default {
 .player-panel {
   font-weight: bold;
   display: flex;
-  overflow: hidden;
   margin: 2px 0;
   padding: 2px;
   width: 420px;
@@ -221,6 +222,19 @@ export default {
   top: 2px;
 }
 
+.muzzleflash {
+  height: 0;
+  align-self: center;
+  box-shadow: 0 0 32px 16px rgba(255, 255, 240, 0);
+  transition: box-shadow 0.4s ease;
+  z-index: -1;
+}
+
+.muzzleflash.firing {
+  box-shadow: 0 0 32px 16px rgba(255, 255, 240, 0.5);
+  transition: box-shadow 0s;
+}
+
 @keyframes onPlayerDead {
   0% {
     background-color: rgba(255,0,0,0.5);
@@ -232,20 +246,5 @@ export default {
 
 .dead-flash {
   animation: onPlayerDead 2s ease;
-}
-
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
 }
 </style>

@@ -1,3 +1,11 @@
+// Neotokyo Websocket Relay
+
+// Changeolg
+
+// 1.2 - Track shooting players
+// 1.1 - Oberver target tracking
+// 1.0 - Initial relaese
+
 // TODO:
 
 // Player equip/drop to keep track of player inventory
@@ -18,7 +26,7 @@
  * C: Player connected
  * D: Player disconnected
  * E: Player equipped weapon
- * F:
+ * F: Player fired gun
  * G:
  * H: Player was hurt
  * I: Initial child socket connect. Sends game and map
@@ -47,7 +55,7 @@
 #include <websocket>
 #include <neotokyo>
 
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.2"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -94,6 +102,8 @@ public OnPluginStart()
 
 	// Neotokyo
 	HookEventEx("game_round_start", Event_OnRoundStart);
+
+	AddTempEntHook("Shotgun Shot", Hook_FireBullets);
 
 	// Hook again if plugin is restarted
 	for(int client = 1; client <= MaxClients; client++)
@@ -226,6 +236,8 @@ public OnClientPutInServer(client)
 
 	SDKHook(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
 	//SDKHook(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
+
+	// SDKHook(client, SDKHook_FireBulletsPost, OnFireBulletsPost);
 
 	new iSize = GetArraySize(g_hChildren);
 	if(iSize == 0)
@@ -369,6 +381,21 @@ public Event_OnChangeName(Handle:event, const String:name[], bool:dontBroadcast)
 
 	decl String:sBuffer[MAX_NAME_LENGTH+10];
 	Format(sBuffer, sizeof(sBuffer), "N%d:%s", userid, sNewName);
+
+	SendToAllChildren(sBuffer);
+}
+
+public Action:Hook_FireBullets(const String:te_name[], const Players[], numClients, Float:delay)
+{
+	new iSize = GetArraySize(g_hChildren);
+	if (iSize == 0)
+		return;
+
+	int client = TE_ReadNum("m_iPlayer") + 1;
+	int userid = GetClientUserId(client);
+
+	char sBuffer[10];
+	Format(sBuffer, sizeof(sBuffer), "F%d", userid);
 
 	SendToAllChildren(sBuffer);
 }
