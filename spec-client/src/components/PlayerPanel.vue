@@ -19,9 +19,13 @@
 
       <div class="break"></div>
       <div class="stats">
-        <img class="xp-icon" :src="'icons/' + rank + '.png'">
+        <div class="icon-container">
+          <img class="xp-icon" :src="'icons/' + rank + '.png'">
+        </div>
         <div class="xp">{{data.xp}}</div>
-        <img class="deaths-icon" src="icons/skull.png">
+        <div class="icon-container">
+          <img class="deaths-icon" src="icons/skull.png">
+        </div>
         <div class="deaths">{{data.deaths}}</div>
       </div>
       <div class="class">{{className}}</div>
@@ -190,10 +194,18 @@ export default {
   align-items: center;
 }
 
+.icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  width: 22px;
+  margin-right: 8px;
+}
+
 .xp-icon, .deaths-icon {
   max-height: 22px;
   max-width: 22px;
-  margin-right: 12px;
 }
 
 .deaths-icon {
@@ -207,7 +219,7 @@ export default {
 }
 
 .xp {
-  margin-right: 16px;
+  margin-right: 14px;
 }
 
 .weapon {
