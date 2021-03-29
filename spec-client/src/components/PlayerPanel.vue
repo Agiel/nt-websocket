@@ -5,7 +5,7 @@
   }">
     <div class="avatar-container flex">
       <div class="avatar" :class="{ dead: !data.isAlive && !data.isSpawning}" :style="{ 'background-image': 'url(' + data.avatar + ')' }"></div>
-      <img class="dead-icon" src="icons/dead.png" v-if="!data.isAlive && !data.isSpawning">
+      <img class="dead-icon" src="icons/dead.svg" v-if="!data.isAlive && !data.isSpawning">
     </div>
     <div class="info flex">
       <div class="health-bar-container flex">
@@ -20,17 +20,17 @@
       <div class="break"></div>
       <div class="stats">
         <div class="icon-container">
-          <img class="xp-icon" :src="'icons/' + rank + '.png'">
+          <img class="xp-icon" :src="'icons/' + rank + '.svg'">
         </div>
         <div class="xp">{{data.xp}}</div>
         <div class="icon-container">
-          <img class="deaths-icon" src="icons/skull.png">
+          <img class="deaths-icon" src="icons/skull.svg">
         </div>
         <div class="deaths">{{data.deaths}}</div>
       </div>
       <div class="class">{{className}}</div>
       <div class="spacer"></div>
-      <img class="weapon-icon" v-if="data.isAlive && data.activeWeapon" :src="'icons/' + data.activeWeapon + '.png'">
+      <img class="weapon-icon" v-if="data.isAlive && data.activeWeapon" :src="'icons/' + data.activeWeapon + '.svg'">
     </div>
     <div class="muzzleflash" :class="{ firing: data.isFiring }">
     </div>
