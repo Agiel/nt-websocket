@@ -234,7 +234,7 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 	char sBuffer[128];
 
 	// Populate with fake players
-	for (int i = 1; i <= MaxClients; ++i) {
+	for (int i = 1, playerclass = CLASS_RECON; i <= MaxClients; ++i) {
 		int fakeuserid = i;
 		int team = (i <= MaxClients / 2) ? TEAM_NSF : TEAM_JINRAI;
 		switch (phase) {
@@ -248,8 +248,7 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 			}
 			case 2:
 			{
-				SetRandomSeed(GetTime() + i);
-				Format(sBuffer, sizeof(sBuffer), "S%d:%d:1", fakeuserid, GetRandomInt(CLASS_RECON, CLASS_SUPPORT));
+				Format(sBuffer, sizeof(sBuffer), "S%d:%d:1", fakeuserid, playerclass);
 			}
 			case 3:
 			{
@@ -262,6 +261,11 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 			}
 		}
 		SendToAllChildren(sBuffer);
+
+		playerclass += 1;
+		if (playerclass > CLASS_SUPPORT) {
+			playerclass = CLASS_RECON;
+		}
 	}
 
 	CreateTimer(1.0, Timer_WepsDebug_AsyncRelay, phase + 1);
