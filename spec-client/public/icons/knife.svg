@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="45px" height="22px" version="1.1" viewBox="0 0 159.48 56.253" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<metadata>
+<rdf:RDF>
+<cc:Work rdf:about="">
+<dc:format>image/svg+xml</dc:format>
+<dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+<dc:title/>
+</cc:Work>
+</rdf:RDF>
+</metadata>
+<g transform="translate(-27.105 -57.438)">
+<path d="m27.332 111.7 5.7756-7.9364 6.0804-6.3142 5.9798-4.7545 7.7013-4.6302 7.0398-2.7876 19.737-5.5677 10.457-3.1738 5.8131-2.0713 6.1806-2.372 1.1378 0.03844 2.5864-4.4797 9.4054 0.19839 3.3162-1.0458 4.8901-1.819 8.331-5.1199 13.072-2.2979 35.979 1.1576 5.6224 4.7719-2.1261 9.2604-2.3151 5.5751-1.7481 2.8348-4.5121 1.0867-17.6-5.0082-7.0951 1.2949-10.691 4.009-4.9779 2.372-6.6817 0.13364-6.5331 2.3957-0.66146 0.92132-1.8426 4.7011-0.54334 3.6853-2.008 2.2915-3.4727 1.0631-4.5357-1.2284-4.2995-2.9293-2.8112 0.92132-1.1339 1.3229-0.68508 1.252-3.26 2.0671-27.451 8.8942-10.42 2.004-8.6915 1.138h-9.662l-6.8272-0.47247z" fill="#c4c4c4" stroke="#000" stroke-width=".26458px"/>
+<path d="m121.5 88.376-5.7346 8.1421-7.4501-3.8754-2.5391-4.4768-1.3029-4.1761-1.7707-11.025 0.53643-0.83019" fill="none" stroke="#000" stroke-width=".26458px"/>
+<ellipse cx="117.02" cy="77.048" rx="3.4747" ry="3.9294" fill="none" stroke="#fff" stroke-linecap="square" stroke-opacity=".25" stroke-width=".13141" style="paint-order:markers fill stroke"/>
+<ellipse cx="117.09" cy="77.001" rx="1.8306" ry="1.8247" fill="#dadada" fill-rule="evenodd" stroke="#fff" stroke-linecap="square" stroke-opacity=".25" stroke-width=".064998" style="paint-order:markers fill stroke"/>
+</g>
+</svg>

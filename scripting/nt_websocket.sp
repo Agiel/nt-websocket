@@ -2,9 +2,10 @@
 
 // Changeolg
 
+// 1.2.1 - Add optional compile flags for including debug commands
 // 1.2 - Track shooting players
 // 1.1 - Oberver target tracking
-// 1.0 - Initial relaese
+// 1.0 - Initial release
 
 // TODO:
 
@@ -21,7 +22,7 @@
 
 /**
  * Control chars:
- * A:
+ * A: Inform others there's another spectator
  * B:
  * C: Player connected
  * D: Player disconnected
@@ -55,9 +56,14 @@
 #include <websocket>
 #include <neotokyo>
 
-#define PLUGIN_VERSION "1.2"
+#define PLUGIN_VERSION "1.2.1"
 
 #define NEO_MAX_CLIENTS 32
+
+// If true, include the "sm_relaydbg" and "sm_relaydbg_populate" server commands for sending simulated relay data.
+#define NT_RELAY_DEBUG false
+// If true, print all SendToAllChildren() relay data to the SRCDS server console.
+#define NT_RELAY_DEBUG_PRINT_SENDS false
 
 new WebsocketHandle:g_hListenSocket = INVALID_WEBSOCKET_HANDLE;
 new Handle:g_hChildren;
@@ -93,6 +99,10 @@ public OnPluginStart()
 	g_hostname = FindConVar("hostname");
 
 	RegConsoleCmd("sm_setobserver", OnSetObserver, "Set current observer for spectator overlay");
+#if NT_RELAY_DEBUG
+	RegConsoleCmd("sm_relaydbg", OnRelayDebug, "Send fake relay output for debugging purposes");
+	RegConsoleCmd("sm_relaydbg_populate", OnRelayWepsDebug, "Populate the server relay with fake players");
+#endif
 
 	HookEvent("player_team", Event_OnPlayerTeam);
 	HookEvent("player_death", Event_OnPlayerDeath);
@@ -143,6 +153,125 @@ public Action OnSetObserver(int client, int args)
 
 	return Plugin_Handled;
 }
+
+#if NT_RELAY_DEBUG
+public Action OnRelayDebug(int client, int args)
+{
+	if (client != 0) {
+		ReplyToCommand(client, "This command can only be executed by the server");
+		return Plugin_Handled;
+	}
+
+	char sBuffer[128];
+
+	if (args != 1) {
+		GetCmdArg(0, sBuffer, sizeof(sBuffer));
+		ReplyToCommand(client, "Usage: %s \"simulated output\"", sBuffer);
+		return Plugin_Handled;
+	}
+
+	if (GetCmdArg(1, sBuffer, sizeof(sBuffer)) < 1) {
+		ReplyToCommand(client, "Can't send empty output");
+		return Plugin_Handled;
+	}
+
+	SendToAllChildren(sBuffer);
+
+	return Plugin_Handled;
+}
+
+public Action OnRelayWepsDebug(int client, int argc)
+{
+	if (client != 0) {
+		ReplyToCommand(client, "This command can only be executed by the server");
+		return Plugin_Handled;
+	}
+
+	char sBuffer[128];
+	// Fake disconnect any existing clients
+	for (int i = 1; i <= MaxClients; ++i) {
+		Format(sBuffer, sizeof(sBuffer), "D%d", i);
+		SendToAllChildren(sBuffer);
+	}
+
+	CreateTimer(1.0, Timer_WepsDebug_AsyncRelay, 0);
+
+	return Plugin_Handled;
+}
+
+// Purpose: Delayed relay access to ensure correct execution order (could technically still go out of order, but good enough for debug).
+public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
+{
+	new const String:weps[][] = {
+		"weapon_aa13",
+		"weapon_ghost",
+		"weapon_grenade",
+		"weapon_jitte",
+		"weapon_jittescoped",
+		"weapon_knife",
+		"weapon_kyla",
+		"weapon_m41",
+		"weapon_m41s",
+		"weapon_milso",
+		"weapon_mp5",
+		"weapon_mpn",
+		"weapon_mx",
+		"weapon_mx_silenced",
+		"weapon_pz",
+		"weapon_smac",
+		"weapon_smokegrenade",
+		"weapon_spidermine",
+		"weapon_srm",
+		"weapon_srm_s",
+		"weapon_srs",
+		"weapon_supa7",
+		"weapon_tachi",
+		"weapon_zr68c",
+		"weapon_zr68l",
+		"weapon_zr68s"
+	};
+
+	char sBuffer[128];
+
+	// Populate with fake players
+	for (int i = 1, playerclass = CLASS_RECON; i <= MaxClients; ++i) {
+		int fakeuserid = i;
+		int team = (i <= MaxClients / 2) ? TEAM_NSF : TEAM_JINRAI;
+		switch (phase) {
+			case 0:
+			{
+				Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:0:0:0:100:0::Fake Player %d", fakeuserid++, i, "STEAM_ID_PLACEHOLDER", team, i, i);
+			}
+			case 1:
+			{
+				Format(sBuffer, sizeof(sBuffer), "T%d:%d", fakeuserid, team);
+			}
+			case 2:
+			{
+				Format(sBuffer, sizeof(sBuffer), "S%d:%d:1", fakeuserid, playerclass);
+			}
+			case 3:
+			{
+				int wep_index = (i - 1) % sizeof(weps); // cycle through weps for predictable position in the overlay, so it's easier to compare visually
+				Format(sBuffer, sizeof(sBuffer), "W%d:%s", i, weps[wep_index]);
+			}
+			default:
+			{
+				return Plugin_Stop;
+			}
+		}
+		SendToAllChildren(sBuffer);
+
+		playerclass += 1;
+		if (playerclass > CLASS_SUPPORT) {
+			playerclass = CLASS_RECON;
+		}
+	}
+
+	CreateTimer(1.0, Timer_WepsDebug_AsyncRelay, phase + 1);
+	return Plugin_Stop;
+}
+#endif
 
 public Action CheckObserverTarget(Handle timer)
 {
@@ -578,6 +707,10 @@ public OnWebsocketDisconnect(WebsocketHandle:websocket)
 
 SendToAllChildren(const String:sData[])
 {
+#if NT_RELAY_DEBUG_PRINT_SENDS
+	PrintToServer("SendToAllChildren: %s", sData);
+#endif
+
 	new iSize = GetArraySize(g_hChildren);
 	new WebsocketHandle:hHandle;
 	for(new i=0;i<iSize;i++)
