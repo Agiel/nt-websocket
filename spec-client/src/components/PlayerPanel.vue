@@ -1,40 +1,42 @@
 <template>
-  <div class="player-panel flex" :class="{
-    'dead-flash': !data.isAlive && !data.isSpawning,
-    'highlight': highlight
-  }">
-    <div class="avatar-container flex">
-      <div class="avatar" :class="{ dead: !data.isAlive && !data.isSpawning}" :style="{ 'background-image': 'url(' + data.avatar + ')' }"></div>
-      <img class="dead-icon" src="icons/dead.svg" v-if="!data.isAlive && !data.isSpawning">
-    </div>
-    <div class="info flex">
-      <div class="health-bar-container flex">
-        <div class="health-bar health-bar-dmg" :style="{ width: data.health + '%' }" v-if="!data.isSpawning"></div>
+  <div class="panel-container flex">
+    <div class="player-panel flex" :class="{
+      'dead-flash': !data.isAlive && !data.isSpawning,
+      'highlight': highlight
+    }">
+      <div class="avatar-container flex">
+        <div class="avatar" :class="{ dead: !data.isAlive && !data.isSpawning}" :style="{ 'background-image': 'url(' + data.avatar + ')' }"></div>
+        <img class="dead-icon" src="icons/dead.svg" v-if="!data.isAlive && !data.isSpawning">
       </div>
-      <div class="health-bar-container flex">
-        <div class="health-bar bg-color" :style="{ width: data.health + '%' }" v-if="data.isAlive"></div>
-      </div>
-      <div class="name">{{data.name}}</div>
-      <div class="health align">{{health}}</div>
+      <div class="info flex">
+        <div class="health-bar-container flex">
+          <div class="health-bar health-bar-dmg" :style="{ width: data.health + '%' }" v-if="!data.isSpawning"></div>
+        </div>
+        <div class="health-bar-container flex">
+          <div class="health-bar bg-color" :style="{ width: data.health + '%' }" v-if="data.isAlive"></div>
+        </div>
+        <div class="name">{{data.name}}</div>
+        <div class="health align">{{health}}</div>
 
-      <div class="break"></div>
-      <div class="stats">
-        <div class="icon-container">
-          <img class="xp-icon" :src="'icons/' + rank + '.svg'">
+        <div class="break"></div>
+        <div class="stats">
+          <div class="icon-container">
+            <img class="xp-icon" :src="'icons/' + rank + '.svg'">
+          </div>
+          <div class="xp">{{data.xp}}</div>
+          <div class="icon-container">
+            <img class="deaths-icon" src="icons/skull.svg">
+          </div>
+          <div class="deaths">{{data.deaths}}</div>
         </div>
-        <div class="xp">{{data.xp}}</div>
-        <div class="icon-container">
-          <img class="deaths-icon" src="icons/skull.svg">
-        </div>
-        <div class="deaths">{{data.deaths}}</div>
+        <div class="class">{{className}}</div>
+        <div class="spacer"></div>
+        <img class="weapon-icon" v-if="data.isAlive && data.activeWeapon && !hasGhost" :src="'icons/' + data.activeWeapon + '.svg'">
       </div>
-      <div class="class">{{className}}</div>
-      <div class="spacer"></div>
-      <img class="weapon-icon" v-if="data.isAlive && data.activeWeapon" :src="'icons/' + data.activeWeapon + '.svg'">
     </div>
-    <div class="muzzleflash" :class="{ firing: data.isFiring }">
-    </div>
-</div>
+    <div class="muzzleflash" :class="{ firing: data.isFiring }"></div>
+    <img class="ghost" v-if="data.isAlive && hasGhost" :src="'icons/ghost.svg'">
+  </div>
 </template>
 
 <script>
@@ -73,6 +75,9 @@ export default {
       } else {
         return "lieutenant"
       }
+    },
+    hasGhost() {
+      return this.data.activeWeapon == "ghost";
     }
   }
 }
@@ -82,7 +87,6 @@ export default {
 <style scoped>
 .player-panel {
   font-weight: bold;
-  display: flex;
   margin: 2px 0;
   padding: 2px;
   width: 420px;
@@ -235,16 +239,21 @@ export default {
 }
 
 .muzzleflash {
-  height: 0;
-  align-self: center;
-  box-shadow: 0 0 32px 16px rgba(255, 255, 240, 0);
-  transition: box-shadow 0.4s ease;
-  z-index: -1;
+  margin: 2px 0;
+  border: solid 2px black;
+  width: 2px;
+  opacity: 0;
+  background-color: white;
+  transition: opacity 1s ease-out;
 }
 
 .muzzleflash.firing {
-  box-shadow: 0 0 32px 16px rgba(255, 255, 240, 0.5);
-  transition: box-shadow 0s;
+  opacity: 0.8;
+  transition: opacity 0s;
+}
+
+.ghost {
+  align-self: center;
 }
 
 @keyframes onPlayerDead {
@@ -252,11 +261,12 @@ export default {
     background-color: rgba(255,0,0,0.5);
   }
   100% {
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(24,0,0,0.5);
   }
 }
 
 .dead-flash {
   animation: onPlayerDead 2s ease;
+  background-color: rgba(24,0,0,0.5);
 }
 </style>

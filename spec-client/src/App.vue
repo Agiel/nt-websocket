@@ -80,6 +80,7 @@ body {
 }
 
 #jinrai .flex {
+  display: flex;
   flex-direction: row;
 }
 
@@ -99,6 +100,7 @@ body {
 }
 
 #nsf .flex {
+  display: flex;
   flex-direction: row-reverse;
 }
 
@@ -110,6 +112,10 @@ body {
   /* background-color: rgba(154, 205, 255, 0.8); */
   /* background-color: rgba(80, 130, 210, 0.8); */
     background: linear-gradient(-90deg, rgba(80, 130, 210, 0.9), rgba(154, 205, 255, 0.9));
+}
+
+#nsf .weapon-icon {
+  transform: scaleX(-1);
 }
 
 #round-counter {
