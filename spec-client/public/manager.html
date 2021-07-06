@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NT Overlay Manager</title>
+</head>
+<body style="font-family: Verdana, Geneva, Tahoma, sans-serif">
+    <input id="show" type="checkbox">Show overlay</checkbox> <br />
+
+    <div style="display: flex">
+        <span style="flex: 0 0 60px">Jinrai</span>
+        <select id="jinrai"></select>
+        <input id="jinrai-score" style="width: 60px" min="0" max="2" type="number"></input>
+    </div>
+    <div style="display: flex">
+        <span style="flex: 0 0 60px">NSF</span>
+        <select id="nsf"></select>
+        <input id="nsf-score" style="width: 60px" min="0" max="2" type="number"></input>
+        <br />
+    </div>
+
+    <script>
+(async () => {
+
+    const teams = [
+        {
+            name: '',
+            tag: 'Jinrai',
+            logo: 'jinrai.png'
+        },
+        {
+            name: '',
+            tag: 'NSF',
+            logo: 'nsf.png'
+        },
+        {
+            name: 'PIGA', // 'Pwyllgor Imperialaeth Gwrth-Americanaidd'
+            tag: 'PIGA',
+            logo: 'piga.png'
+        },
+        {
+            name: 'Warpig Gang',
+            tag: 'WPG',
+            logo: 'warpig.png'
+        },
+        {
+            name: 'AHNS', // 'All Hammer No Sickle',
+            tag: 'AHNS',
+            logo: 'ahns.png'
+        },
+        {
+            name: 'ASNH', // 'All Sickle No Hammer',
+            tag: 'ASNH',
+            logo: 'asnh.png'
+        },
+        {
+            name: 'Road to deepfrog',
+            tag: 'dF',
+            logo: 'df.png'
+        },
+        {
+            name: 'JUMAISINBA',
+            tag: 'JUMA',
+            logo: 'juma.png'
+        },
+        {
+            name: 'Bonkurazu',
+            tag: 'BONK',
+            logo: 'bonk.png'
+        },
+        {
+            name: 'Ikko-Ikki',
+            tag: 'ikko',
+            logo: 'ikko.png'
+        },
+        {
+            name: 'NaT°',
+            tag: 'NaT',
+            logo: 'nat.png'
+        }
+    ];
+
+    const teamsDict = teams.reduce((dict, team) => {
+        dict[team.tag] = team;
+        return dict;
+    }, {});
+
+    const state = {};
+
+    const showCheckbox = document.getElementById('show');
+    const jinraiDropdown = document.getElementById('jinrai');
+    const jinraiScoreInput = document.getElementById('jinrai-score');
+    const nsfDropdown = document.getElementById('nsf');
+    const nsfScoreInput = document.getElementById('nsf-score');
+
+    const fetchState = async () => {
+        // const res = await fetch('http://' + window.location.hostname + ':3000/state');
+        const res = await fetch('/state');
+        const data = await res.json();
+        Object.assign(state, data);
+    };
+
+    try {
+        await fetchState();
+    } catch (e) {
+        console.log(e);
+    }
+
+    const appendOpts = dropdown => {
+        teams.forEach(team => {
+            const opt = document.createElement('option');
+            opt.value = team.tag;
+            opt.innerHTML = `[${team.tag}] ${team.name}`;
+            dropdown.append(opt);
+        });
+    };
+
+    const applyState = state => {
+        showCheckbox.checked = state.show;
+
+        jinraiDropdown.value = state.jinrai.tag;
+        jinraiScoreInput.value = state.jinrai.score;
+
+        nsfDropdown.value = state.nsf.tag;
+        nsfScoreInput.value = state.nsf.score;
+    }
+
+    const pushState = (state) => {
+        // fetch('http://' + window.location.hostname + ':3000/state', {
+        fetch('/state', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(state)
+        });
+    }
+
+    const getState = () => {
+        const newState = {
+            show: showCheckbox.checked,
+            jinrai: teamsDict[jinraiDropdown.value],
+            nsf: teamsDict[nsfDropdown.value]
+        }
+        newState.jinrai.score = jinraiScoreInput.value;
+        newState.nsf.score = nsfScoreInput.value;
+
+        Object.assign(state, newState);
+        return state;
+    }
+
+    appendOpts(jinraiDropdown);
+    appendOpts(nsfDropdown);
+
+    applyState(state);
+
+    // const ws = new WebSocket('ws://' + window.location.hostname + ':3000/state');
+    const ws = new WebSocket('ws://' + window.location.host + '/state');
+    ws.addEventListener('message', event => {
+        const data = JSON.parse(event.data);
+        applyState(data);
+    });
+
+    const onChange = evt => {
+        const state = getState();
+        pushState(state);
+    };
+
+    showCheckbox.onchange = onChange;
+    jinraiDropdown.onchange = onChange;
+    jinraiScoreInput.onchange = onChange;
+    nsfDropdown.onchange = onChange;
+    nsfScoreInput.onchange = onChange;
+})();
+    </script>
+</body>
+</html>

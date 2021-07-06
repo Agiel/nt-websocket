@@ -1,17 +1,41 @@
 const express = require('express');
-//const cors = require('cors');
+const ws = require('ws');
+const cors = require('cors');
 const http = require('http');
 const { key } = require('./key');
 const app = express();
+
 const port = 3000;
 
 // Look up the same steamID at most once per day
 const CACHE_TIME = 1000 * 60 * 60 * 24;
 
 app.use('/overlay', express.static('dist'));
-//app.use(cors());
+app.use(cors());
+app.use(express.json());
+
+const wsServer = new ws.Server({
+    noServer: true,
+    clientTracking: true
+});
 
 const avatarCache = {};
+
+const overlayState = {
+    show: true,
+    jinrai: {
+        name: '',
+        tag: 'Jinrai',
+        logo: 'jinrai.png',
+        score: 0
+    },
+    nsf: {
+        name: '',
+        tag: 'NSF',
+        logo: 'nsf.png',
+        score: 0
+    }
+};
 
 app.get('/avatar/:steamIds', (req, res) => {
     const steamIds = req.params.steamIds.split(',');
@@ -57,6 +81,53 @@ app.get('/avatar/:steamIds', (req, res) => {
     }
 });
 
-app.listen(port, () => {
+app.get('/state', (req, res) => {
+    res.send(overlayState);
+});
+
+app.post('/state', (req, res) => {
+    if (typeof req.body.show == 'boolean') {
+        overlayState.show = req.body.show;
+    }
+
+    const jinrai = req.body.jinrai;
+    if (typeof jinrai == 'object') {
+        overlayState.jinrai = {
+            name: jinrai.name ?? overlayState.jinrai.name,
+            tag: jinrai.tag ?? overlayState.jinrai.tag,
+            logo: jinrai.logo ?? overlayState.jinrai.logo,
+            score: jinrai.score ?? overlayState.jinrai.score
+        }
+    }
+    const nsf = req.body.nsf;
+    if (typeof nsf == 'object') {
+        overlayState.nsf = {
+            name: nsf.name ?? overlayState.nsf.name,
+            tag: nsf.tag ?? overlayState.nsf.tag,
+            logo: nsf.logo ?? overlayState.nsf.logo,
+            score: nsf.score ?? overlayState.nsf.score
+        }
+    }
+
+    res.send(overlayState);
+
+    wsServer.clients.forEach(ws => ws.send(JSON.stringify(overlayState)));
+});
+
+const server = app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
+});
+
+wsServer.on('connection', socket => {
+    socket.on('message', message => console.log(message));
+});
+
+server.on('upgrade', (req, socket, head) => {
+    if (req.url == '/state') {
+        wsServer.handleUpgrade(req, socket, head, socket => {
+            wsServer.emit('connection', socket, req);
+        });
+    } else {
+        socket.destroy();
+    }
 });

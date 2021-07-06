@@ -18,6 +18,9 @@ const store = reactive({
     players: [],
     roundNumber: 0,
     observerTarget: 0,
+    showOverlay: false,
+    nsf: {},
+    jinrai: {}
 });
 
 const uidToPlayer = {};
@@ -41,7 +44,7 @@ async function getAvatarURLs(players) {
     const steamIds = players.map((player) => player.steamId, []).join();
     try {
 
-        //const res = await fetch('http://' + window.location.hostname + ':3000/avatar/' + steamIds);
+        // const res = await fetch('http://' + window.location.hostname + ':3000/avatar/' + steamIds);
         const res = await fetch('/avatar/' + steamIds);
         const data = await res.json();
         while (players.length > 0) {
@@ -208,9 +211,25 @@ async function handleMessage(data) {
     // console.log(data);
 }
 
-function connect(ip) {
+async function connect(ip) {
     const ws = new WebSocket(ip);
-    ws.addEventListener('message', (event) => handleMessage(event.data));
+    ws.addEventListener('message', event => handleMessage(event.data));
+
+    // const localWs = new WebSocket('ws://' + window.location.hostname + ':3000/state');
+    const localWs = new WebSocket('ws://' + window.location.host + '/state');
+    localWs.addEventListener('message', event => {
+        const state = JSON.parse(event.data);
+        store.showOverlay = state.show;
+        store.jinrai = state.jinrai;
+        store.nsf = state.nsf;
+    });
+
+    // const res = await fetch('http://' + window.location.hostname + ':3000/state');
+    const res = await fetch('/state');
+    const state = await res.json();
+    store.showOverlay = state.show;
+    store.jinrai = state.jinrai;
+    store.nsf = state.nsf;
 }
 
 
