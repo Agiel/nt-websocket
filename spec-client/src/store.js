@@ -14,6 +14,16 @@ const CLASSES = [
     "Support",
 ]
 
+const VETOSTAGES = [
+    "Inactive",
+    "CoinFlip",
+    "FirstTeamBan",
+    "SecondTeamBan",
+    "SecondTeamPick",
+    "FirstTeamPick",
+    "RandomThirdMap",
+]
+
 const store = reactive({
     players: [],
     roundNumber: 0,
@@ -206,6 +216,42 @@ async function handleMessage(data) {
 
             break;
         }
+        // Y: VetoStage has changed
+        case 'Y': {
+            const stage = VETOSTAGES[parts[0]];
+            // TODO: if VETOSTAGES.Inactive, hide any veto visual we've got.
+            //       else, display veto stage visuals as appropriate.
+            console.log('Y -- Stage: ' + stage);
+
+            break;
+        }
+        // Z: A veto map ban/pick has been decided
+        case 'Z': {
+            const stage = VETOSTAGES[parts[0]];
+            const team =  TEAMS[parts[1]];
+            const mapName = parts[2];
+            // TODO: Display the ban/pick visuals.
+            console.log('Z -- Stage: ' + stage + ' && Team: ' + team + ' && Map: ' + mapName);
+
+            break;
+        }
+
+        /* Example output from the Y and Z messages for a full veto:
+
+            Y -- Stage: CoinFlip
+            Z -- Stage: FirstTeamBan && Team: Jinrai && Map: nt_dawn_ctg
+            Y -- Stage: FirstTeamBan
+            Z -- Stage: SecondTeamBan && Team: NSF && Map: nt_disengage_ctg
+            Y -- Stage: SecondTeamBan
+            Z -- Stage: SecondTeamPick && Team: NSF && Map: nt_oilstain_ctg
+            Y -- Stage: SecondTeamPick
+            Z -- Stage: FirstTeamPick && Team: Jinrai && Map: nt_isolation_ctg
+            Y -- Stage: FirstTeamPick
+            Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_pissalley_ctg
+            Y -- Stage: RandomThirdMap
+            Y -- Stage: Inactive
+
+        */
     }
 
     // console.log(data);

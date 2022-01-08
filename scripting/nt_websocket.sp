@@ -2,6 +2,7 @@
 
 // Changeolg
 
+// 1.3 - Map vetos
 // 1.2.2 - Support custom playercounts for "sm_relaydbg_populate" debug command
 // 1.2.1 - Add optional compile flags for including debug commands
 // 1.2 - Track shooting players
@@ -14,8 +15,6 @@
 // Does throwing grenade trigger drop?
 
 // Separate XP, frags and assists? Might be hard to keep in sync with the comp plugin shenanigans.
-
-// Map vetos
 
 // Track shooting players
 
@@ -47,8 +46,8 @@
  * V: ConVar changed
  * W: Player switched to weapon
  * X: Chat message
- * Y:
- * Z:
+ * Y: OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
+ * Z: OnMapVetoPick(VetoStage current_veto_stage, int vetoing_team, const char[] map_name)
  */
 #pragma semicolon 1
 #include <sourcemod>
@@ -56,8 +55,10 @@
 #include <sdkhooks>
 #include <websocket>
 #include <neotokyo>
+#include <nt_competitive_vetos_enum>
+#include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.2.2"
+#define PLUGIN_VERSION "1.3"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -80,6 +81,7 @@ char g_playerActiveWeapon[NEO_MAX_CLIENTS + 1][20];
 
 int g_currentObserver = 0;
 int g_currentObserverTarget = 0;
+
 #if NT_RELAY_DEBUG
 int g_maxFakeClients = 10;
 #endif
@@ -146,6 +148,20 @@ public OnPluginEnd()
 {
 	if(g_hListenSocket != INVALID_WEBSOCKET_HANDLE)
 		Websocket_Close(g_hListenSocket);
+}
+
+public void OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
+{
+	char sBuffer[128];
+	Format(sBuffer, sizeof(sBuffer), "Y%d:%d", new_veto_stage, param2);
+	SendToAllChildren(sBuffer);
+}
+
+public void OnMapVetoPick(VetoStage current_veto_stage, int vetoing_team, const char[] map_name)
+{
+	char sBuffer[128];
+	Format(sBuffer, sizeof(sBuffer), "Z%d:%d:%s", current_veto_stage, vetoing_team, map_name);
+	SendToAllChildren(sBuffer);
 }
 
 public Action OnSetObserver(int client, int args)
@@ -282,6 +298,7 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 		if (playerclass > CLASS_SUPPORT) {
 			playerclass = CLASS_RECON;
 		}
+
 		// Break early if we've got a user-set max. fake players limit active
 		if (g_maxFakeClients > 0) {
 			if (++num_fake_players >= g_maxFakeClients) {
