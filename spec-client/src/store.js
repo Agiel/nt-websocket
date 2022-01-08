@@ -22,6 +22,7 @@ const VETOSTAGES = [
     "SecondTeamPick",
     "FirstTeamPick",
     "RandomThirdMap",
+    "CoinFlipResult",
 ]
 
 const store = reactive({
@@ -219,9 +220,16 @@ async function handleMessage(data) {
         // Y: VetoStage has changed
         case 'Y': {
             const stage = VETOSTAGES[parts[0]];
-            // TODO: if VETOSTAGES.Inactive, hide any veto visual we've got.
+
+            if (stage == "CoinFlipResult") {
+                const team = TEAMS[parts[1]];
+                console.log('Y -- Stage: ' + stage + ' && Team: ' + team);
+            }
+            else {
+                console.log('Y -- Stage: ' + stage);
+            }
+            // TODO: if stage == VETOSTAGES.Inactive, hide any veto visual we've got.
             //       else, display veto stage visuals as appropriate.
-            console.log('Y -- Stage: ' + stage);
 
             break;
         }
@@ -239,18 +247,18 @@ async function handleMessage(data) {
         /* Example output from the Y and Z messages for a full veto:
 
             Y -- Stage: CoinFlip
-            Z -- Stage: FirstTeamBan && Team: Jinrai && Map: nt_dawn_ctg
+            Y -- Stage: CoinFlipResult && Team: NSF
+            Z -- Stage: FirstTeamBan && Team: NSF && Map: nt_ghost_ctg
             Y -- Stage: FirstTeamBan
-            Z -- Stage: SecondTeamBan && Team: NSF && Map: nt_disengage_ctg
+            Z -- Stage: SecondTeamBan && Team: Jinrai && Map: nt_sentinel_ctg
             Y -- Stage: SecondTeamBan
-            Z -- Stage: SecondTeamPick && Team: NSF && Map: nt_oilstain_ctg
+            Z -- Stage: SecondTeamPick && Team: Jinrai && Map: nt_dusk_ctg
             Y -- Stage: SecondTeamPick
-            Z -- Stage: FirstTeamPick && Team: Jinrai && Map: nt_isolation_ctg
+            Z -- Stage: FirstTeamPick && Team: NSF && Map: nt_threadplate_ctg
             Y -- Stage: FirstTeamPick
-            Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_pissalley_ctg
+            Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_skyline_ctg
             Y -- Stage: RandomThirdMap
             Y -- Stage: Inactive
-
         */
     }
 
