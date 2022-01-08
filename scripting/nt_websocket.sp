@@ -15,6 +15,8 @@
 
 // Separate XP, frags and assists? Might be hard to keep in sync with the comp plugin shenanigans.
 
+// Map vetos
+
 // Track shooting players
 
 // Players "spawning" mid round, usually after switching team, are reported as alive even if they're dead.
