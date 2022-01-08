@@ -2,6 +2,7 @@
 
 // Changeolg
 
+// 1.2.2 - Support custom playercounts for "sm_relaydbg_populate" debug command
 // 1.2.1 - Add optional compile flags for including debug commands
 // 1.2 - Track shooting players
 // 1.1 - Oberver target tracking
@@ -13,8 +14,6 @@
 // Does throwing grenade trigger drop?
 
 // Separate XP, frags and assists? Might be hard to keep in sync with the comp plugin shenanigans.
-
-// Map vetos
 
 // Track shooting players
 
@@ -56,7 +55,7 @@
 #include <websocket>
 #include <neotokyo>
 
-#define PLUGIN_VERSION "1.2.1"
+#define PLUGIN_VERSION "1.2.2"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -79,6 +78,9 @@ char g_playerActiveWeapon[NEO_MAX_CLIENTS + 1][20];
 
 int g_currentObserver = 0;
 int g_currentObserverTarget = 0;
+#if NT_RELAY_DEBUG
+int g_maxFakeClients = 10;
+#endif
 
 public Plugin:myinfo =
 {
@@ -101,7 +103,7 @@ public OnPluginStart()
 	RegConsoleCmd("sm_setobserver", OnSetObserver, "Set current observer for spectator overlay");
 #if NT_RELAY_DEBUG
 	RegConsoleCmd("sm_relaydbg", OnRelayDebug, "Send fake relay output for debugging purposes");
-	RegConsoleCmd("sm_relaydbg_populate", OnRelayWepsDebug, "Populate the server relay with fake players");
+	RegConsoleCmd("sm_relaydbg_populate", OnRelayWepsDebug, "Populate the server relay with fake players. Optionally, pass in the number of fake players wanted.");
 #endif
 
 	HookEvent("player_team", Event_OnPlayerTeam);
@@ -180,11 +182,20 @@ public Action OnRelayDebug(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action OnRelayWepsDebug(int client, int argc)
+public Action OnRelayWepsDebug(int client, int args)
 {
 	if (client != 0) {
 		ReplyToCommand(client, "This command can only be executed by the server");
 		return Plugin_Handled;
+	}
+
+	// Optionally specify number of fake clients to populate, eg: "sm_relaydbg_populate 12" for fake 6v6.
+	// Will populate 10 (5v5) by default.
+	if (args == 1) {
+		char buffer[3];
+		GetCmdArg(1, buffer, sizeof(buffer));
+		int i = StringToInt(buffer);
+		g_maxFakeClients = i >= 0 ? i : 0; // <=0 disables the limit
 	}
 
 	char sBuffer[128];
@@ -234,9 +245,12 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 	char sBuffer[128];
 
 	// Populate with fake players
+	int num_fake_players;
 	for (int i = 1, playerclass = CLASS_RECON; i <= MaxClients; ++i) {
 		int fakeuserid = i;
-		int team = (i <= MaxClients / 2) ? TEAM_NSF : TEAM_JINRAI;
+		// Alternate teams for odd & even numbers so that we get equal teams
+		// with any even number of players spawned.
+		int team = (i % 2 == 0) ? TEAM_NSF : TEAM_JINRAI;
 		switch (phase) {
 			case 0:
 			{
@@ -265,6 +279,12 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 		playerclass += 1;
 		if (playerclass > CLASS_SUPPORT) {
 			playerclass = CLASS_RECON;
+		}
+		// Break early if we've got a user-set max. fake players limit active
+		if (g_maxFakeClients > 0) {
+			if (++num_fake_players >= g_maxFakeClients) {
+				break;
+			}
 		}
 	}
 
