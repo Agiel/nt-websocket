@@ -2,6 +2,7 @@
 
 // Changeolg
 
+// 1.3.1 - Also send veto map list at veto start
 // 1.3 - Map vetos
 // 1.2.2 - Support custom playercounts for "sm_relaydbg_populate" debug command
 // 1.2.1 - Add optional compile flags for including debug commands
@@ -33,7 +34,7 @@
  * I: Initial child socket connect. Sends game and map
  * J:
  * K: Player died
- * L:
+ * L: Veto map list
  * M: Map changed
  * N: Player changed his name
  * O: Observer target changed
@@ -58,7 +59,7 @@
 #include <nt_competitive_vetos_enum>
 #include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.3"
+#define PLUGIN_VERSION "1.3.1"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -152,6 +153,27 @@ public OnPluginEnd()
 
 public void OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
 {
+	// Send the full veto list during a coin flip
+	if (new_veto_stage == VETO_STAGE_COIN_FLIP) {
+		int veto_pool_size = CompetitiveVetos_GetVetoMapPoolSize();
+		if (veto_pool_size > 0) {
+			int size = veto_pool_size * PLATFORM_MAX_PATH + veto_pool_size + 1;
+			char[] vetoListBuff = new char[size];
+			int num_written = Format(vetoListBuff, size, "L%d:", veto_pool_size);
+			if (veto_pool_size > 0) {
+				char map_name[PLATFORM_MAX_PATH];
+				for (int i = 0; i < veto_pool_size; ++i) {
+					if (CompetitiveVetos_GetNameOfMapPoolMap(i, map_name, sizeof(map_name)) != 0) {
+						num_written += StrCat(vetoListBuff, size, map_name);
+						num_written += StrCat(vetoListBuff, size, ":");
+					}
+				}
+			}
+			vetoListBuff[num_written - 1] = '\0'; // Remove trailing delimiter
+			SendToAllChildren(vetoListBuff);
+		}
+	}
+
 	char sBuffer[128];
 	Format(sBuffer, sizeof(sBuffer), "Y%d:%d", new_veto_stage, param2);
 	SendToAllChildren(sBuffer);

@@ -155,6 +155,17 @@ async function handleMessage(data) {
 
             break;
         }
+        // * L: List of veto maps that are used for vetos
+        case 'L': {
+            const num_maps = parts[0];
+            let maps = [];
+            for (let i = 1; i <= num_maps; ++i) {
+                maps.push(parts[i]);
+            }
+            console.log('L -- Maps:\n' + maps);
+
+            break;
+        }
         // * N: Player changed his name
         case 'N': {
             const player = uidToPlayer[parts[0]];
@@ -244,22 +255,27 @@ async function handleMessage(data) {
             break;
         }
 
-        /* Example output from the Y and Z messages for a full veto:
+		/* Example output from the veto flow:
 
-            Y -- Stage: CoinFlip
-            Y -- Stage: CoinFlipResult && Team: NSF
-            Z -- Stage: FirstTeamBan && Team: NSF && Map: nt_ghost_ctg
-            Y -- Stage: FirstTeamBan
-            Z -- Stage: SecondTeamBan && Team: Jinrai && Map: nt_sentinel_ctg
-            Y -- Stage: SecondTeamBan
-            Z -- Stage: SecondTeamPick && Team: Jinrai && Map: nt_dusk_ctg
-            Y -- Stage: SecondTeamPick
-            Z -- Stage: FirstTeamPick && Team: NSF && Map: nt_threadplate_ctg
-            Y -- Stage: FirstTeamPick
-            Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_skyline_ctg
-            Y -- Stage: RandomThirdMap
-            Y -- Stage: Inactive
-        */
+			L -- Maps:
+					array of [nt_ballistrade_ctg,nt_bullet_tdm,nt_dawn_ctg,
+							  nt_decom_ctg,nt_disengage_ctg,nt_dusk_ctg,
+							  nt_engage_ctg,nt_ghost_ctg,nt_isolation_ctg]
+			Y -- Stage: CoinFlip
+			Y -- Stage: CoinFlipResult && Team: Jinrai
+			Z -- Stage: FirstTeamBan && Team: Jinrai && Map: nt_dusk_ctg
+			Y -- Stage: FirstTeamBan
+			Z -- Stage: SecondTeamBan && Team: NSF && Map: nt_dawn_ctg
+			Y -- Stage: SecondTeamBan
+			Z -- Stage: SecondTeamPick && Team: NSF && Map: nt_decom_ctg
+			Y -- Stage: SecondTeamPick
+			Z -- Stage: FirstTeamPick && Team: Jinrai && Map: nt_isolation_ctg
+			Y -- Stage: FirstTeamPick
+			Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_ghost_ctg
+			Y -- Stage: RandomThirdMap
+			Y -- Stage: Inactive
+
+		*/
     }
 
     // console.log(data);
