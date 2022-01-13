@@ -157,16 +157,14 @@ public void OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
 	if (new_veto_stage == VETO_STAGE_COIN_FLIP) {
 		int veto_pool_size = CompetitiveVetos_GetVetoMapPoolSize();
 		if (veto_pool_size > 0) {
-			int size = veto_pool_size * PLATFORM_MAX_PATH + veto_pool_size + 1;
-			char[] vetoListBuff = new char[size];
-			int num_written = Format(vetoListBuff, size, "L%d:", veto_pool_size);
-			if (veto_pool_size > 0) {
-				char map_name[PLATFORM_MAX_PATH];
-				for (int i = 0; i < veto_pool_size; ++i) {
-					if (CompetitiveVetos_GetNameOfMapPoolMap(i, map_name, sizeof(map_name)) != 0) {
-						num_written += StrCat(vetoListBuff, size, map_name);
-						num_written += StrCat(vetoListBuff, size, ":");
-					}
+			int buff_size = veto_pool_size * PLATFORM_MAX_PATH + veto_pool_size + 1;
+			char[] vetoListBuff = new char[buff_size];
+			int num_written = Format(vetoListBuff, buff_size, "L%d:", veto_pool_size);
+			char map_name[PLATFORM_MAX_PATH];
+			for (int i = 0; i < veto_pool_size; ++i) {
+				if (CompetitiveVetos_GetNameOfMapPoolMap(i, map_name, sizeof(map_name)) != 0) {
+					num_written += StrCat(vetoListBuff, buff_size, map_name);
+					num_written += StrCat(vetoListBuff, buff_size, ":");
 				}
 			}
 			vetoListBuff[num_written - 1] = '\0'; // Remove trailing delimiter
