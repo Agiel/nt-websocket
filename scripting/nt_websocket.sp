@@ -172,14 +172,14 @@ public void OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
 		}
 	}
 
-	char sBuffer[128];
+	char sBuffer[7];
 	Format(sBuffer, sizeof(sBuffer), "Y%d:%d", new_veto_stage, param2);
 	SendToAllChildren(sBuffer);
 }
 
 public void OnMapVetoPick(VetoStage current_veto_stage, int vetoing_team, const char[] map_name)
 {
-	char sBuffer[128];
+	char sBuffer[6 + PLATFORM_MAX_PATH + 1];
 	Format(sBuffer, sizeof(sBuffer), "Z%d:%d:%s", current_veto_stage, vetoing_team, map_name);
 	SendToAllChildren(sBuffer);
 }
