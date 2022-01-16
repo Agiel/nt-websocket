@@ -59,7 +59,7 @@
 #include <nt_competitive_vetos_enum>
 #include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.3.1"
+#define PLUGIN_VERSION "1.3.2"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -106,6 +106,7 @@ public OnPluginStart()
 	g_hostname = FindConVar("hostname");
 
 	RegConsoleCmd("sm_setobserver", OnSetObserver, "Set current observer for spectator overlay");
+	RegConsoleCmd("sm_setobserve", OnSetObserver, "Alias for sm_setobserver");
 #if NT_RELAY_DEBUG
 	RegConsoleCmd("sm_relaydbg", OnRelayDebug, "Send fake relay output for debugging purposes");
 	RegConsoleCmd("sm_relaydbg_populate", OnRelayWepsDebug, "Populate the server relay with fake players. Optionally, pass in the number of fake players wanted.");
