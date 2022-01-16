@@ -190,7 +190,7 @@ public Action OnSetObserver(int client, int args)
 	g_currentObserver = client;
 	CreateTimer(0.1, CheckObserverTarget, _, TIMER_REPEAT);
 
-	PrintToConsole(client, "Tracking observer target for %N", client);
+	ReplyToCommand(client, "You are now set as the stream observer.");
 
 	return Plugin_Handled;
 }
