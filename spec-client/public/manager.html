@@ -7,7 +7,8 @@
     <title>NT Overlay Manager</title>
 </head>
 <body style="font-family: Verdana, Geneva, Tahoma, sans-serif">
-    <input id="show" type="checkbox">Show overlay</checkbox> <br />
+    <input id="show" type="checkbox">Show overlay</checkbox>
+    <input id="name" value="">
 
     <div style="display: flex">
         <span style="flex: 0 0 60px">Jinrai</span>
@@ -79,6 +80,26 @@
             name: 'NaT°',
             tag: 'NaT',
             logo: 'nat.png'
+        },
+        {
+            name: 'FD',
+            tag: 'FD',
+            logo: 'fd.png'
+        },
+        {
+            name: 'WH',
+            tag: 'WH',
+            logo: 'whg.png'
+        },
+        {
+            name: 'Fumco',
+            tag: 'Fumco',
+            logo: 'fumco.jpg'
+        },
+        {
+            name: 'Ghost Brigade',
+            tag: 'GB',
+            logo: 'gb.webp'
         }
     ];
 
@@ -90,6 +111,7 @@
     const state = {};
 
     const showCheckbox = document.getElementById('show');
+    const tournamentName = document.getElementById('name');
     const jinraiDropdown = document.getElementById('jinrai');
     const jinraiScoreInput = document.getElementById('jinrai-score');
     const nsfDropdown = document.getElementById('nsf');
@@ -119,6 +141,7 @@
 
     const applyState = state => {
         showCheckbox.checked = state.show;
+        tournamentName.value = state.name;
 
         jinraiDropdown.value = state.jinrai.tag;
         jinraiScoreInput.value = state.jinrai.score;
@@ -141,6 +164,7 @@
     const getState = () => {
         const newState = {
             show: showCheckbox.checked,
+            name: tournamentName.value,
             jinrai: teamsDict[jinraiDropdown.value],
             nsf: teamsDict[nsfDropdown.value]
         }
@@ -148,6 +172,7 @@
         newState.nsf.score = nsfScoreInput.value;
 
         Object.assign(state, newState);
+
         return state;
     }
 
@@ -169,6 +194,7 @@
     };
 
     showCheckbox.onchange = onChange;
+    tournamentName.onchange = onChange;
     jinraiDropdown.onchange = onChange;
     jinraiScoreInput.onchange = onChange;
     nsfDropdown.onchange = onChange;

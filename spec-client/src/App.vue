@@ -75,7 +75,7 @@ body {
 }
 
 #container {
-  margin-top: 500px;
+  margin-top: 300px;
   display: flex;
 }
 

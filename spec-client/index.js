@@ -23,6 +23,7 @@ const avatarCache = {};
 
 const overlayState = {
     show: true,
+    name: 'Summer Skirmish 2022',
     jinrai: {
         name: '',
         tag: 'Jinrai',
@@ -88,6 +89,10 @@ app.get('/state', (req, res) => {
 app.post('/state', (req, res) => {
     if (typeof req.body.show == 'boolean') {
         overlayState.show = req.body.show;
+    }
+
+    if (typeof req.body.name == 'string') {
+        overlayState.name = req.body.name;
     }
 
     const jinrai = req.body.jinrai;

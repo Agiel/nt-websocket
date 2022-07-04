@@ -220,6 +220,7 @@ async function connect(ip) {
     localWs.addEventListener('message', event => {
         const state = JSON.parse(event.data);
         store.showOverlay = state.show;
+        store.tournamentName = state.name;
         store.jinrai = state.jinrai;
         store.nsf = state.nsf;
     });
@@ -228,6 +229,7 @@ async function connect(ip) {
     const res = await fetch('/state');
     const state = await res.json();
     store.showOverlay = state.show;
+    store.tournamentName = state.name;
     store.jinrai = state.jinrai;
     store.nsf = state.nsf;
 }

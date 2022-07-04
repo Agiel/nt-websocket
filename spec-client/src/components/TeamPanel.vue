@@ -62,7 +62,9 @@ export default {
     line-height: 20px;
     justify-content: center;
     color: white;
-    font-size: 28px;
+    opacity: 0.9;
+    font-size: 32px;
+    -webkit-text-stroke: white 1px;
 }
 
 .score {
