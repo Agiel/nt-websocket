@@ -2,6 +2,9 @@
 
 // Changeolg
 
+// 1.3.1 - Also send veto map list at veto start
+// 1.3 - Map vetos
+// 1.2.2 - Support custom playercounts for "sm_relaydbg_populate" debug command
 // 1.2.1 - Add optional compile flags for including debug commands
 // 1.2 - Track shooting players
 // 1.1 - Oberver target tracking
@@ -13,8 +16,6 @@
 // Does throwing grenade trigger drop?
 
 // Separate XP, frags and assists? Might be hard to keep in sync with the comp plugin shenanigans.
-
-// Map vetos
 
 // Track shooting players
 
@@ -33,7 +34,7 @@
  * I: Initial child socket connect. Sends game and map
  * J:
  * K: Player died
- * L:
+ * L: Veto map list
  * M: Map changed
  * N: Player changed his name
  * O: Observer target changed
@@ -46,8 +47,8 @@
  * V: ConVar changed
  * W: Player switched to weapon
  * X: Chat message
- * Y:
- * Z:
+ * Y: OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
+ * Z: OnMapVetoPick(VetoStage current_veto_stage, int vetoing_team, const char[] map_name)
  */
 #pragma semicolon 1
 #include <sourcemod>
@@ -55,8 +56,10 @@
 #include <sdkhooks>
 #include <websocket>
 #include <neotokyo>
+#include <nt_competitive_vetos_enum>
+#include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.2.1"
+#define PLUGIN_VERSION "1.3.2"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -80,6 +83,10 @@ char g_playerActiveWeapon[NEO_MAX_CLIENTS + 1][20];
 int g_currentObserver = 0;
 int g_currentObserverTarget = 0;
 
+#if NT_RELAY_DEBUG
+int g_maxFakeClients = 10;
+#endif
+
 public Plugin:myinfo =
 {
 	name = "Neotokyo WebSocket",
@@ -99,9 +106,10 @@ public OnPluginStart()
 	g_hostname = FindConVar("hostname");
 
 	RegConsoleCmd("sm_setobserver", OnSetObserver, "Set current observer for spectator overlay");
+	RegConsoleCmd("sm_setobserve", OnSetObserver, "Alias for sm_setobserver");
 #if NT_RELAY_DEBUG
 	RegConsoleCmd("sm_relaydbg", OnRelayDebug, "Send fake relay output for debugging purposes");
-	RegConsoleCmd("sm_relaydbg_populate", OnRelayWepsDebug, "Populate the server relay with fake players");
+	RegConsoleCmd("sm_relaydbg_populate", OnRelayWepsDebug, "Populate the server relay with fake players. Optionally, pass in the number of fake players wanted.");
 #endif
 
 	HookEvent("player_team", Event_OnPlayerTeam);
@@ -144,12 +152,45 @@ public OnPluginEnd()
 		Websocket_Close(g_hListenSocket);
 }
 
+public void OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
+{
+	// Send the full veto list during a coin flip
+	if (new_veto_stage == VETO_STAGE_COIN_FLIP) {
+		int veto_pool_size = CompetitiveVetos_GetVetoMapPoolSize();
+		if (veto_pool_size > 0) {
+			int buff_size = veto_pool_size * PLATFORM_MAX_PATH + veto_pool_size + 1;
+			char[] vetoListBuff = new char[buff_size];
+			int num_written = Format(vetoListBuff, buff_size, "L%d:", veto_pool_size);
+			char map_name[PLATFORM_MAX_PATH];
+			for (int i = 0; i < veto_pool_size; ++i) {
+				if (CompetitiveVetos_GetNameOfMapPoolMap(i, map_name, sizeof(map_name)) != 0) {
+					num_written += StrCat(vetoListBuff, buff_size, map_name);
+					num_written += StrCat(vetoListBuff, buff_size, ":");
+				}
+			}
+			vetoListBuff[num_written - 1] = '\0'; // Remove trailing delimiter
+			SendToAllChildren(vetoListBuff);
+		}
+	}
+
+	char sBuffer[7];
+	Format(sBuffer, sizeof(sBuffer), "Y%d:%d", new_veto_stage, param2);
+	SendToAllChildren(sBuffer);
+}
+
+public void OnMapVetoPick(VetoStage current_veto_stage, int vetoing_team, const char[] map_name)
+{
+	char sBuffer[6 + PLATFORM_MAX_PATH + 1];
+	Format(sBuffer, sizeof(sBuffer), "Z%d:%d:%s", current_veto_stage, vetoing_team, map_name);
+	SendToAllChildren(sBuffer);
+}
+
 public Action OnSetObserver(int client, int args)
 {
 	g_currentObserver = client;
 	CreateTimer(0.1, CheckObserverTarget, _, TIMER_REPEAT);
 
-	PrintToConsole(client, "Tracking observer target for %N", client);
+	ReplyToCommand(client, "You are now set as the stream observer.");
 
 	return Plugin_Handled;
 }
@@ -180,11 +221,20 @@ public Action OnRelayDebug(int client, int args)
 	return Plugin_Handled;
 }
 
-public Action OnRelayWepsDebug(int client, int argc)
+public Action OnRelayWepsDebug(int client, int args)
 {
 	if (client != 0) {
 		ReplyToCommand(client, "This command can only be executed by the server");
 		return Plugin_Handled;
+	}
+
+	// Optionally specify number of fake clients to populate, eg: "sm_relaydbg_populate 12" for fake 6v6.
+	// Will populate 10 (5v5) by default.
+	if (args == 1) {
+		char buffer[3];
+		GetCmdArg(1, buffer, sizeof(buffer));
+		int i = StringToInt(buffer);
+		g_maxFakeClients = i >= 0 ? i : 0; // <=0 disables the limit
 	}
 
 	char sBuffer[128];
@@ -234,9 +284,12 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 	char sBuffer[128];
 
 	// Populate with fake players
+	int num_fake_players;
 	for (int i = 1, playerclass = CLASS_RECON; i <= MaxClients; ++i) {
 		int fakeuserid = i;
-		int team = (i <= MaxClients / 2) ? TEAM_NSF : TEAM_JINRAI;
+		// Alternate teams for odd & even numbers so that we get equal teams
+		// with any even number of players spawned.
+		int team = (i % 2 == 0) ? TEAM_NSF : TEAM_JINRAI;
 		switch (phase) {
 			case 0:
 			{
@@ -265,6 +318,13 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 		playerclass += 1;
 		if (playerclass > CLASS_SUPPORT) {
 			playerclass = CLASS_RECON;
+		}
+
+		// Break early if we've got a user-set max. fake players limit active
+		if (g_maxFakeClients > 0) {
+			if (++num_fake_players >= g_maxFakeClients) {
+				break;
+			}
 		}
 	}
 

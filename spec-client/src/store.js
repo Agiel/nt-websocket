@@ -14,6 +14,17 @@ const CLASSES = [
     "Support",
 ]
 
+const VETOSTAGES = [
+    "Inactive",
+    "CoinFlip",
+    "FirstTeamBan",
+    "SecondTeamBan",
+    "SecondTeamPick",
+    "FirstTeamPick",
+    "RandomThirdMap",
+    "CoinFlipResult",
+]
+
 const store = reactive({
     players: [],
     roundNumber: 0,
@@ -26,18 +37,18 @@ const store = reactive({
 const uidToPlayer = {};
 
 function debounce(func, wait, immediate) {
-	var timeout;
-	return function() {
-		var context = this, args = arguments;
-		var later = function() {
-			timeout = null;
-			if (!immediate) func.apply(context, args);
-		};
-		var callNow = immediate && !timeout;
-		clearTimeout(timeout);
-		timeout = setTimeout(later, wait);
-		if (callNow) func.apply(context, args);
-	};
+    var timeout;
+    return function() {
+        var context = this, args = arguments;
+        var later = function() {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+        var callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+    };
 }
 
 async function getAvatarURLs(players) {
@@ -144,6 +155,17 @@ async function handleMessage(data) {
 
             break;
         }
+        // * L: List of veto maps that are used for vetos
+        case 'L': {
+            const num_maps = parts[0];
+            let maps = [];
+            for (let i = 1; i <= num_maps; ++i) {
+                maps.push(parts[i]);
+            }
+            console.log('L -- Maps:\n' + maps);
+
+            break;
+        }
         // * N: Player changed his name
         case 'N': {
             const player = uidToPlayer[parts[0]];
@@ -206,6 +228,54 @@ async function handleMessage(data) {
 
             break;
         }
+        // Y: VetoStage has changed
+        case 'Y': {
+            const stage = VETOSTAGES[parts[0]];
+
+            if (stage == "CoinFlipResult") {
+                const team = TEAMS[parts[1]];
+                console.log('Y -- Stage: ' + stage + ' && Team: ' + team);
+            }
+            else {
+                console.log('Y -- Stage: ' + stage);
+            }
+            // TODO: if stage == VETOSTAGES.Inactive, hide any veto visual we've got.
+            //       else, display veto stage visuals as appropriate.
+
+            break;
+        }
+        // Z: A veto map ban/pick has been decided
+        case 'Z': {
+            const stage = VETOSTAGES[parts[0]];
+            const team =  TEAMS[parts[1]];
+            const mapName = parts[2];
+            // TODO: Display the ban/pick visuals.
+            console.log('Z -- Stage: ' + stage + ' && Team: ' + team + ' && Map: ' + mapName);
+
+            break;
+        }
+
+		/* Example output from the veto flow:
+
+			L -- Maps:
+					array of [nt_ballistrade_ctg,nt_bullet_tdm,nt_dawn_ctg,
+							  nt_decom_ctg,nt_disengage_ctg,nt_dusk_ctg,
+							  nt_engage_ctg,nt_ghost_ctg,nt_isolation_ctg]
+			Y -- Stage: CoinFlip
+			Y -- Stage: CoinFlipResult && Team: Jinrai
+			Z -- Stage: FirstTeamBan && Team: Jinrai && Map: nt_dusk_ctg
+			Y -- Stage: FirstTeamBan
+			Z -- Stage: SecondTeamBan && Team: NSF && Map: nt_dawn_ctg
+			Y -- Stage: SecondTeamBan
+			Z -- Stage: SecondTeamPick && Team: NSF && Map: nt_decom_ctg
+			Y -- Stage: SecondTeamPick
+			Z -- Stage: FirstTeamPick && Team: Jinrai && Map: nt_isolation_ctg
+			Y -- Stage: FirstTeamPick
+			Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_ghost_ctg
+			Y -- Stage: RandomThirdMap
+			Y -- Stage: Inactive
+
+		*/
     }
 
     // console.log(data);
