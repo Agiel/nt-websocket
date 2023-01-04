@@ -23,7 +23,7 @@ const avatarCache = {};
 
 const overlayState = {
     show: true,
-    name: 'Summer Skirmish 2022',
+    name: 'Winter Warzone 2023',
     jinrai: {
         name: '',
         tag: 'Jinrai',
