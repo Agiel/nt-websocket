@@ -5,7 +5,7 @@ const http = require('http');
 const { key } = require('./key');
 const app = express();
 
-const port = 3000;
+const port = 3002;
 
 // Look up the same steamID at most once per day
 const CACHE_TIME = 1000 * 60 * 60 * 24;

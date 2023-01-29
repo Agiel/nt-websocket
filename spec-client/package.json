@@ -9,20 +9,20 @@
     "backend": "node index.js"
   },
   "dependencies": {
-    "core-js": "^3.6.5",
+    "core-js": "^3.27.1",
     "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "vue": "^3.0.0",
-    "ws": "^7.4.6"
+    "express": "^4.18.2",
+    "vue": "^3.2.45",
+    "ws": "^8.12.0"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.5.0",
-    "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-service": "~4.5.0",
-    "@vue/compiler-sfc": "^3.0.0",
-    "babel-eslint": "^10.1.0",
-    "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^7.0.0-0"
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-eslint": "~5.0.8",
+    "@vue/cli-service": "~5.0.8",
+    "@vue/compiler-sfc": "^3.2.45",
+    "@babel/eslint-parser": "7.19.1",
+    "eslint": "^8.31.0",
+    "eslint-plugin-vue": "^9.8.0"
   },
   "eslintConfig": {
     "root": true,
@@ -34,7 +34,7 @@
       "eslint:recommended"
     ],
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@babel/eslint-parser"
     },
     "rules": {}
   },

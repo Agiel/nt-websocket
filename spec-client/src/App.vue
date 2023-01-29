@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Overlay v-if="showOverlay"></Overlay>
+    <TournamentOverlay v-if="showOverlay"></TournamentOverlay>
     <TeamInfo></TeamInfo>
     <div id="round-counter">Round {{roundCount}}</div>
     <div id="container">
@@ -20,6 +20,7 @@
         ></PlayerPanel>
       </div>
     </div>
+    <VetoProgress></VetoProgress>
   </div>
 </template>
 
@@ -27,8 +28,9 @@
 import { store } from './store'
 
 import PlayerPanel from './components/PlayerPanel'
-import Overlay from './components/Overlay'
+import TournamentOverlay from './components/TournamentOverlay'
 import TeamInfo from './components/TeamInfo'
+import VetoProgress from './components/VetoProgress'
 
 export default {
   name: 'App',
@@ -54,8 +56,9 @@ export default {
   },
   components: {
     PlayerPanel,
-    Overlay,
-    TeamInfo
+    TournamentOverlay,
+    TeamInfo,
+    VetoProgress
   }
 }
 </script>
@@ -128,7 +131,11 @@ body {
 }
 
 #round-counter {
-  margin-top: 32px;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  margin-top: 48px;
   font-family: xscale;
   font-size: 28px;
   color: white;

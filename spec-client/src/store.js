@@ -31,7 +31,12 @@ const store = reactive({
     observerTarget: 0,
     showOverlay: false,
     nsf: {},
-    jinrai: {}
+    jinrai: {},
+    vetoStage: "Inactive",
+    vetoFirst: "Jinrai",
+    vetoSecond: "NSF",
+    vetoPool: [],
+    vetoPicks: [],
 });
 
 const uidToPlayer = {};
@@ -163,6 +168,8 @@ async function handleMessage(data) {
                 maps.push(parts[i]);
             }
             console.log('L -- Maps:\n' + maps);
+            store.vetoPool = maps;
+            store.vetoPicks = [];
 
             break;
         }
@@ -235,12 +242,19 @@ async function handleMessage(data) {
             if (stage == "CoinFlipResult") {
                 const team = TEAMS[parts[1]];
                 console.log('Y -- Stage: ' + stage + ' && Team: ' + team);
+                store.vetoFirst = team;
+                store.vetoSecond = team === "Jinrai" ? "NSF" : "Jinrai";
             }
             else {
                 console.log('Y -- Stage: ' + stage);
             }
-            // TODO: if stage == VETOSTAGES.Inactive, hide any veto visual we've got.
-            //       else, display veto stage visuals as appropriate.
+
+            if (stage === "Inactive") {
+                // Wait 30 seconds before removing the panel
+                setTimeout(() => store.vetoStage = stage, 60000);
+            } else {
+                store.vetoStage = stage;
+            }
 
             break;
         }
@@ -248,9 +262,16 @@ async function handleMessage(data) {
         case 'Z': {
             const stage = VETOSTAGES[parts[0]];
             const team =  TEAMS[parts[1]];
-            const mapName = parts[2];
-            // TODO: Display the ban/pick visuals.
-            console.log('Z -- Stage: ' + stage + ' && Team: ' + team + ' && Map: ' + mapName);
+            const map = parts[2];
+
+            console.log('Z -- Stage: ' + stage + ' && Team: ' + team + ' && Map: ' + map);
+
+            store.vetoPicks.push({
+                map,
+                team,
+                action: stage.endsWith('Ban') ? 'Ban' : 'Pick'
+            });
+            store.vetoPool = store.vetoPool.filter((m) => m !== map);
 
             break;
         }
@@ -263,16 +284,16 @@ async function handleMessage(data) {
 							  nt_engage_ctg,nt_ghost_ctg,nt_isolation_ctg]
 			Y -- Stage: CoinFlip
 			Y -- Stage: CoinFlipResult && Team: Jinrai
-			Z -- Stage: FirstTeamBan && Team: Jinrai && Map: nt_dusk_ctg
 			Y -- Stage: FirstTeamBan
-			Z -- Stage: SecondTeamBan && Team: NSF && Map: nt_dawn_ctg
+			Z -- Stage: FirstTeamBan && Team: Jinrai && Map: nt_dusk_ctg
 			Y -- Stage: SecondTeamBan
-			Z -- Stage: SecondTeamPick && Team: NSF && Map: nt_decom_ctg
+			Z -- Stage: SecondTeamBan && Team: NSF && Map: nt_dawn_ctg
 			Y -- Stage: SecondTeamPick
-			Z -- Stage: FirstTeamPick && Team: Jinrai && Map: nt_isolation_ctg
+			Z -- Stage: SecondTeamPick && Team: NSF && Map: nt_decom_ctg
 			Y -- Stage: FirstTeamPick
-			Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_ghost_ctg
+			Z -- Stage: FirstTeamPick && Team: Jinrai && Map: nt_isolation_ctg
 			Y -- Stage: RandomThirdMap
+			Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_ghost_ctg
 			Y -- Stage: Inactive
 
 		*/
@@ -304,6 +325,9 @@ async function connect(ip) {
     store.nsf = state.nsf;
 }
 
+window.debug = {
+    store
+}
 
 export {
     connect as connect,
