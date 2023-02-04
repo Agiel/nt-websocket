@@ -56,19 +56,19 @@ function debounce(func, wait, immediate) {
     };
 }
 
-async function getAvatarURLs(players) {
+async function getAvatarURLs() {
+    const players = [...toLookUp];
+    toLookUp.length = 0;
     const steamIds = players.map((player) => player.steamId, []).join();
     try {
-
         // const res = await fetch('http://' + window.location.hostname + ':3000/avatar/' + steamIds);
         const res = await fetch('/avatar/' + steamIds);
         const data = await res.json();
-        while (players.length > 0) {
-            const player = players.pop();
+        players.forEach((player) => {
             player.avatar = data[player.steamId];
-        }
+        });
     } catch (e) {
-        while (players.length > 0) { players.pop() }
+        console.error("Error fetching avatars", e);
     }
 }
 
@@ -80,7 +80,7 @@ function getAvatarURL(player) {
         return;
 
     toLookUp.push(player);
-    getAvatarURLsDebounced(toLookUp);
+    getAvatarURLsDebounced();
 }
 
 async function handleMessage(data) {
@@ -316,13 +316,17 @@ async function connect(ip) {
         store.nsf = state.nsf;
     });
 
-    // const res = await fetch('http://' + window.location.hostname + ':3000/state');
-    const res = await fetch('/state');
-    const state = await res.json();
-    store.showOverlay = state.show;
-    store.tournamentName = state.name;
-    store.jinrai = state.jinrai;
-    store.nsf = state.nsf;
+    try {
+        // const res = await fetch('http://' + window.location.hostname + ':3000/state');
+        const res = await fetch('/state');
+        const state = await res.json();
+        store.showOverlay = state.show;
+        store.tournamentName = state.name;
+        store.jinrai = state.jinrai;
+        store.nsf = state.nsf;
+    } catch (e) {
+        console.error("Error fetching match state", e);
+    }
 }
 
 window.debug = {
