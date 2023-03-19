@@ -1,24 +1,35 @@
 <template>
     <div class="veto-progress" v-if="store.vetoStage !== 'Inactive'">
         <div class="veto-progress-container">
-            <div class="veto-stage">{{title}}</div>
+            <div class="veto-stage">{{ title }}</div>
             <div class="veto-picks">
-                <div class="veto-pick-container"
+                <div
+                    class="veto-pick-container"
                     v-for="pick in store.vetoPicks"
                     :key="pick.map"
                     :class="pick.team.toLowerCase()"
                 >
-                    <span class="action" :class="pick.action.toLowerCase()">{{getSymbol(pick)}}</span>
-                    <span class="map" :class="[{ finished: isFinished }, pick.action.toLowerCase()]">{{pick.map}}</span>
+                    <span class="action" :class="pick.action.toLowerCase()">{{
+                        getSymbol(pick)
+                    }}</span>
+                    <span
+                        class="map"
+                        :class="[
+                            { finished: isFinished },
+                            pick.action.toLowerCase(),
+                        ]"
+                        >{{ pick.map }}</span
+                    >
                     <span class="dummy"></span>
                 </div>
             </div>
             <div class="veto-pool">
-                <div v-for="map in store.vetoPool"
+                <div
+                    v-for="map in store.vetoPool"
                     :key="map"
                     :class="{ finished: isFinished }"
                 >
-                    {{map}}
+                    {{ map }}
                 </div>
             </div>
         </div>
@@ -29,14 +40,13 @@
 import { computed } from "vue";
 import { store } from "../store";
 
-const getSymbol = (pick) => (
-    pick.team === 'Spectator' ? '🎲'
-        : pick.action === 'Pick' ? '✓' : '✗'
-);
+const getSymbol = (pick) =>
+    pick.team === "Spectator" ? "🎲" : pick.action === "Pick" ? "✓" : "✗";
 
 const isFinished = computed(() => store.vetoStage === "RandomThirdMap");
 
-const getTeamName = (team) => team === "Jinrai" ? store.jinrai.tag : store.nsf.tag;
+const getTeamName = (team) =>
+    team === "Jinrai" ? store.jinrai.tag : store.nsf.tag;
 
 const title = computed(() => {
     switch (store.vetoStage) {
@@ -57,7 +67,7 @@ const title = computed(() => {
         default:
             return store.vetoStage;
     }
-})
+});
 </script>
 
 <style>

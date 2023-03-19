@@ -2,36 +2,24 @@
     <div class="info">
         <div class="spacer"></div>
         <div>
-            <img class="logo" :src="'logos/' + team.logo">
+            <img class="logo" :src="'logos/' + team.logo" />
             <div class="score-container">
-                <span class="score">{{scoreFirst}}</span>
-                <span class="score">{{scoreSecond}}</span>
+                <span class="score">{{ scoreFirst }}</span>
+                <span class="score">{{ scoreSecond }}</span>
             </div>
         </div>
-        <div class="name align">{{team.name}}</div>
+        <div class="name align">{{ team.name }}</div>
     </div>
 </template>
 
-<script>
-export default {
-    props: {
-        team: Object
-    },
-    computed: {
-        scoreFirst() {
-            if (this.team.score > 0)
-                return '■';
-            else
-                return '□'
-        },
-        scoreSecond() {
-            if (this.team.score > 1)
-                return '■';
-            else
-                return '□'
-        }
-    }
-}
+<script setup>
+import { computed } from "vue";
+
+const props = defineProps({
+    team: Object,
+});
+const scoreFirst = computed(() => (props.team.score > 0 ? "■" : "□"));
+const scoreSecond = computed(() => (props.team.score > 1 ? "■" : "□"));
 </script>
 
 <style scoped>

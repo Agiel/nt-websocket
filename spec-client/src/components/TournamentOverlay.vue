@@ -1,18 +1,15 @@
 <template>
     <div class="overlay">
-        <img class="overlay-image" src="../assets/overlay.png">
-        <div class="tournament-name">{{tournamentName}}</div>
+        <img class="overlay-image" src="../assets/overlay.png" />
+        <div class="tournament-name">{{ tournamentName }}</div>
     </div>
 </template>
 
-<script>
-import { store } from '../store'
+<script setup>
+import { computed } from "vue";
+import { store } from "../store";
 
-export default {
-    computed: {
-        tournamentName: () => store.tournamentName,
-    }
-}
+const tournamentName = computed(() => store.tournamentName);
 </script>
 
 <style scoped>

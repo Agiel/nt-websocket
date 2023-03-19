@@ -5,14 +5,14 @@ const TEAMS = [
     "Spectator",
     "Jinrai",
     "NSF",
-]
+];
 
 const CLASSES = [
     "None",
     "Recon",
     "Assault",
     "Support",
-]
+];
 
 const VETOSTAGES = [
     "Inactive",
@@ -23,7 +23,7 @@ const VETOSTAGES = [
     "FirstTeamPick",
     "RandomThirdMap",
     "CoinFlipResult",
-]
+];
 
 const store = reactive({
     players: [],
@@ -42,14 +42,14 @@ const store = reactive({
 const uidToPlayer = {};
 
 function debounce(func, wait, immediate) {
-    var timeout;
-    return function() {
-        var context = this, args = arguments;
-        var later = function() {
+    let timeout;
+    return function () {
+        const context = this, args = arguments;
+        const later = function () {
             timeout = null;
             if (!immediate) func.apply(context, args);
         };
-        var callNow = immediate && !timeout;
+        const callNow = immediate && !timeout;
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
         if (callNow) func.apply(context, args);
@@ -87,7 +87,7 @@ async function handleMessage(data) {
     const type = data[0];
     const parts = data.slice(1).split(':');
 
-    switch(type) {
+    switch (type) {
         // * C: Player connected
         case 'C': {
             const player = reactive({
@@ -261,7 +261,7 @@ async function handleMessage(data) {
         // Z: A veto map ban/pick has been decided
         case 'Z': {
             const stage = VETOSTAGES[parts[0]];
-            const team =  TEAMS[parts[1]];
+            const team = TEAMS[parts[1]];
             const map = parts[2];
 
             console.log('Z -- Stage: ' + stage + ' && Team: ' + team + ' && Map: ' + map);
@@ -276,27 +276,27 @@ async function handleMessage(data) {
             break;
         }
 
-		/* Example output from the veto flow:
+        /* Example output from the veto flow:
 
-			L -- Maps:
-					array of [nt_ballistrade_ctg,nt_bullet_tdm,nt_dawn_ctg,
-							  nt_decom_ctg,nt_disengage_ctg,nt_dusk_ctg,
-							  nt_engage_ctg,nt_ghost_ctg,nt_isolation_ctg]
-			Y -- Stage: CoinFlip
-			Y -- Stage: CoinFlipResult && Team: Jinrai
-			Y -- Stage: FirstTeamBan
-			Z -- Stage: FirstTeamBan && Team: Jinrai && Map: nt_dusk_ctg
-			Y -- Stage: SecondTeamBan
-			Z -- Stage: SecondTeamBan && Team: NSF && Map: nt_dawn_ctg
-			Y -- Stage: SecondTeamPick
-			Z -- Stage: SecondTeamPick && Team: NSF && Map: nt_decom_ctg
-			Y -- Stage: FirstTeamPick
-			Z -- Stage: FirstTeamPick && Team: Jinrai && Map: nt_isolation_ctg
-			Y -- Stage: RandomThirdMap
-			Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_ghost_ctg
-			Y -- Stage: Inactive
+            L -- Maps:
+                    array of [nt_ballistrade_ctg,nt_bullet_tdm,nt_dawn_ctg,
+                              nt_decom_ctg,nt_disengage_ctg,nt_dusk_ctg,
+                              nt_engage_ctg,nt_ghost_ctg,nt_isolation_ctg]
+            Y -- Stage: CoinFlip
+            Y -- Stage: CoinFlipResult && Team: Jinrai
+            Y -- Stage: FirstTeamBan
+            Z -- Stage: FirstTeamBan && Team: Jinrai && Map: nt_dusk_ctg
+            Y -- Stage: SecondTeamBan
+            Z -- Stage: SecondTeamBan && Team: NSF && Map: nt_dawn_ctg
+            Y -- Stage: SecondTeamPick
+            Z -- Stage: SecondTeamPick && Team: NSF && Map: nt_decom_ctg
+            Y -- Stage: FirstTeamPick
+            Z -- Stage: FirstTeamPick && Team: Jinrai && Map: nt_isolation_ctg
+            Y -- Stage: RandomThirdMap
+            Z -- Stage: RandomThirdMap && Team: Spectator && Map: nt_ghost_ctg
+            Y -- Stage: Inactive
 
-		*/
+        */
     }
 
     // console.log(data);
@@ -331,9 +331,9 @@ async function connect(ip) {
 
 window.debug = {
     store
-}
+};
 
 export {
     connect as connect,
     store as store,
-}
+};

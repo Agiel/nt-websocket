@@ -5,23 +5,13 @@
     </div>
 </template>
 
-<script>
-import TeamPanel from './TeamPanel'
-import { store } from '../store'
+<script setup>
+import { computed } from "vue";
+import TeamPanel from "./TeamPanel";
+import { store } from "../store";
 
-export default {
-    computed: {
-        jinrai() {
-            return store.jinrai;
-        },
-        nsf() {
-            return store.nsf;
-        }
-    },
-    components: {
-        TeamPanel
-    }
-}
+const jinrai = computed(() => store.jinrai);
+const nsf = computed(() => store.nsf);
 </script>
 
 <style scoped>
@@ -32,7 +22,8 @@ export default {
     width: 1920px;
 }
 
-.jinrai, .nsf {
+.jinrai,
+.nsf {
     width: 50%;
 }
 
