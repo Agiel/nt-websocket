@@ -2,6 +2,7 @@
 
 // Changeolg
 
+// 1.4 - Send team scores with round number. Send round timer.
 // 1.3.1 - Also send veto map list at veto start
 // 1.3 - Map vetos
 // 1.2.2 - Support custom playercounts for "sm_relaydbg_populate" debug command
@@ -24,7 +25,7 @@
 /**
  * Control chars:
  * A: Inform others there's another spectator
- * B:
+ * B: Round timer in seconds
  * C: Player connected
  * D: Player disconnected
  * E: Player equipped weapon
@@ -59,7 +60,7 @@
 #include <nt_competitive_vetos_enum>
 #include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.3.2"
+#define PLUGIN_VERSION "1.4.0"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -74,7 +75,7 @@ new Handle:g_hChildIP;
 
 new Handle:g_hostname;
 
-new g_iRoundNumber = -1;
+int g_iRoundNumber = -1;
 
 int g_playerXP[NEO_MAX_CLIENTS + 1];
 int g_playerDeaths[NEO_MAX_CLIENTS + 1];
@@ -82,6 +83,8 @@ char g_playerActiveWeapon[NEO_MAX_CLIENTS + 1][20];
 
 int g_currentObserver = 0;
 int g_currentObserverTarget = 0;
+
+int g_roundTimeLeft = 0;
 
 #if NT_RELAY_DEBUG
 int g_maxFakeClients = 10;
@@ -93,7 +96,7 @@ public Plugin:myinfo =
 	author = "Agiel",
 	description = "Neotokyo WebSocket relay. Based on Jannik \"Peace-Maker\" Hartung's SourceTV 2D Server",
 	version = PLUGIN_VERSION,
-	url = "http://www.wcfan.de/"
+	url = "https://github.com/Agiel/nt-websocket"
 }
 
 public OnPluginStart()
@@ -150,6 +153,17 @@ public OnPluginEnd()
 {
 	if(g_hListenSocket != INVALID_WEBSOCKET_HANDLE)
 		Websocket_Close(g_hListenSocket);
+}
+
+public OnGameFrame()
+{
+	int timeLeft = RoundToFloor(GameRules_GetPropFloat("m_fRoundTimeLeft"));
+	if (timeLeft != g_roundTimeLeft) {
+		g_roundTimeLeft = timeLeft;
+		char sBuffer[6];
+		Format(sBuffer,sizeof(sBuffer), "B%d", timeLeft);
+		SendToAllChildren(sBuffer);
+	}
 }
 
 public void OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
@@ -543,15 +557,22 @@ public Event_OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 	if(iSize == 0)
 		return;
 
+	CreateTimer(0.1, CheckScores);
+	CreateTimer(0.1, SendTeamScores);
+}
+
+public Action SendTeamScores(Handle timer)
+{
 	g_iRoundNumber = GameRules_GetProp("m_iRoundNumber");
+	int jinraiScore = GetTeamScore(TEAM_JINRAI);
+	int nsfScore = GetTeamScore(TEAM_NSF);
 
 	decl String:sBuffer[32];
-	Format(sBuffer, sizeof(sBuffer), "R%d", g_iRoundNumber);
+	Format(sBuffer, sizeof(sBuffer), "R%d:%d:%d", g_iRoundNumber, jinraiScore, nsfScore);
 
 	SendToAllChildren(sBuffer);
-
-	CreateTimer(0.1, CheckScores);
 }
+
 
 public Event_OnChangeName(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -681,7 +702,9 @@ public OnWebsocketReadyStateChanged(WebsocketHandle:websocket, WebsocketReadySta
 
 	if(g_iRoundNumber != -1)
 	{
-		Format(sBuffer, sizeof(sBuffer), "R%d", g_iRoundNumber);
+		int jinraiScore = GetTeamScore(TEAM_JINRAI);
+		int nsfScore = GetTeamScore(TEAM_NSF);
+		Format(sBuffer, sizeof(sBuffer), "R%d:%d:%d", g_iRoundNumber, jinraiScore, nsfScore);
 		Websocket_Send(websocket, SendType_Text, sBuffer);
 	}
 

@@ -1,13 +1,14 @@
 <template>
     <div class="info">
         <div class="spacer"></div>
-        <div>
-            <img class="logo" :src="'logos/' + team.logo" />
-            <div class="score-container">
-                <span class="score">{{ scoreFirst }}</span>
-                <span class="score">{{ scoreSecond }}</span>
-            </div>
+        <div class="score-container">
+            {{ props.score }}
         </div>
+        <div class="maps-container">
+            <span class="score" :class="{filled: scoreSecond}">■</span>
+            <span class="score" :class="{filled: scoreFirst}">■</span>
+        </div>
+        <img class="logo" :src="'logos/' + team.logo" />
         <div class="name align">{{ team.name }}</div>
     </div>
 </template>
@@ -17,9 +18,10 @@ import { computed } from "vue";
 
 const props = defineProps({
     team: Object,
+    score: Number,
 });
-const scoreFirst = computed(() => (props.team.score > 0 ? "■" : "□"));
-const scoreSecond = computed(() => (props.team.score > 1 ? "■" : "□"));
+const scoreFirst = computed(() => (props.team.score > 0));
+const scoreSecond = computed(() => (props.team.score > 1));
 </script>
 
 <style scoped>
@@ -30,7 +32,7 @@ const scoreSecond = computed(() => (props.team.score > 1 ? "■" : "□"));
 }
 
 .spacer {
-    flex: 0 0 120px;
+    flex: 0 0 80px;
 }
 .name {
     flex: 0 0 auto;
@@ -42,20 +44,34 @@ const scoreSecond = computed(() => (props.team.score > 1 ? "■" : "□"));
 }
 
 .logo {
-    height: 72px;
+    height: 80px;
 }
 
 .score-container {
+    font-family: xscale;
+    font-size: 48px;
+    color: white;
+    margin: 24px;
+}
+
+.maps-container {
     display: flex;
+    flex-direction: column;
+    height: 80px;
     line-height: 20px;
-    justify-content: center;
+    justify-content: space-evenly;
     color: white;
     opacity: 0.9;
     font-size: 32px;
     -webkit-text-stroke: white 1px;
+    margin: 12px;
 }
 
 .score {
-    margin: 0 6px;
+    opacity: 0.2;
+}
+
+.score.filled {
+    opacity: 1;
 }
 </style>

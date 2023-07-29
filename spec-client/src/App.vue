@@ -2,7 +2,10 @@
     <div>
         <TournamentOverlay v-if="showOverlay"></TournamentOverlay>
         <TeamInfo></TeamInfo>
-        <div id="round-counter">Round {{ roundCount }}</div>
+        <div id="round-info">
+            <div id="round-counter">Round {{ roundCount }}</div>
+            <div id="round-timer">{{ roundTimeLeft }}</div>
+        </div>
         <div id="container">
             <div class="jinrai">
                 <PlayerPanel
@@ -44,6 +47,13 @@ const nsf = computed(() =>
     players.value.filter((player) => player.team == "NSF")
 );
 const roundCount = computed(() => +store.roundNumber + 1);
+const roundTimeLeft = computed(
+    () =>
+        `${Math.floor(store.roundTimeLeft / 60)}:${String(
+            store.roundTimeLeft % 60
+        ).padStart(2, "0")}`
+);
+
 const observerTarget = computed(() => store.observerTarget);
 const showOverlay = computed(() => store.showOverlay);
 </script>
@@ -119,18 +129,28 @@ body {
     transform: scaleX(-1);
 }
 
-#round-counter {
+#round-info {
     position: absolute;
     left: 0;
     top: 0;
     width: 1920px;
-    margin-top: 48px;
+    margin-top: 36px;
     font-family: xscale;
     font-size: 28px;
     color: white;
+    line-height: 0.75;
+}
+
+#round-timer {
+    font-size: 40px;
 }
 
 #debug {
     margin-top: 100px;
+}
+
+@font-face {
+    font-family: xscale;
+    src: url("assets/X-SCALE_.TTF");
 }
 </style>
