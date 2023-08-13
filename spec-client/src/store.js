@@ -27,7 +27,11 @@ const VETOSTAGES = [
 
 const store = reactive({
     players: [],
+    roundTimeLeft: 0,
     roundNumber: 0,
+    jinraiScore: 0,
+    nsfScore: 0,
+    currentMap: "",
     observerTarget: 0,
     showOverlay: false,
     nsf: {},
@@ -61,8 +65,9 @@ async function getAvatarURLs() {
     toLookUp.length = 0;
     const steamIds = players.map((player) => player.steamId, []).join();
     try {
-        // const res = await fetch('http://' + window.location.hostname + ':3000/avatar/' + steamIds);
-        const res = await fetch('/avatar/' + steamIds);
+        const res = process.env.NODE_ENV === 'development'
+            ? await fetch('http://' + window.location.hostname + ':3000/avatar/' + steamIds)
+            : await fetch('/avatar/' + steamIds);
         const data = await res.json();
         players.forEach((player) => {
             player.avatar = data[player.steamId];
@@ -88,6 +93,11 @@ async function handleMessage(data) {
     const parts = data.slice(1).split(':');
 
     switch (type) {
+        // * B: Round time left
+        case 'B': {
+            store.roundTimeLeft = parseInt(parts[0], 10);
+            break;
+        }
         // * C: Player connected
         case 'C': {
             const player = reactive({
@@ -151,6 +161,11 @@ async function handleMessage(data) {
             break;
         }
         // * I: Initial child socket connect. Sends game and map
+        case 'I': {
+            store.currentMap = parts[1];
+
+            break;
+        }
         // * K: Player died
         case 'K': {
             const player = uidToPlayer[parts[0]];
@@ -170,6 +185,15 @@ async function handleMessage(data) {
             console.log('L -- Maps:\n' + maps);
             store.vetoPool = maps;
             store.vetoPicks = [];
+
+            break;
+        }
+        // * M: Map changed
+        case 'M': {
+            store.currentMap = parts[0];
+            store.jinraiScore = 0;
+            store.nsfScore = 0;
+            store.roundNumber = 0;
 
             break;
         }
@@ -195,7 +219,9 @@ async function handleMessage(data) {
         }
         // * R: Round start
         case 'R':
-            store.roundNumber = parts[0];
+            store.roundNumber = +parts[0];
+            store.jinraiScore = +parts[1];
+            store.nsfScore = +parts[2];
             store.players.forEach((player) => {
                 player.isAlive = false;
                 player.isSpawning = true;
@@ -306,8 +332,9 @@ async function connect(ip) {
     const ws = new WebSocket(ip);
     ws.addEventListener('message', event => handleMessage(event.data));
 
-    // const localWs = new WebSocket('ws://' + window.location.hostname + ':3000/state');
-    const localWs = new WebSocket('ws://' + window.location.host + '/state');
+    const localWs = process.env.NODE_ENV === 'development'
+        ? new WebSocket('ws://' + window.location.hostname + ':3000/state')
+        : new WebSocket('ws://' + window.location.host + '/state');
     localWs.addEventListener('message', event => {
         const state = JSON.parse(event.data);
         store.showOverlay = state.show;
@@ -317,8 +344,9 @@ async function connect(ip) {
     });
 
     try {
-        // const res = await fetch('http://' + window.location.hostname + ':3000/state');
-        const res = await fetch('/state');
+        const res = process.env.NODE_ENV === 'development'
+            ? await fetch('http://' + window.location.hostname + ':3000/state')
+            : await fetch('/state');
         const state = await res.json();
         store.showOverlay = state.show;
         store.tournamentName = state.name;
