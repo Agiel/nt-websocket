@@ -1,240 +1,296 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NT Overlay Manager</title>
 </head>
-<body style="font-family: Verdana, Geneva, Tahoma, sans-serif">
-    <input id="show" type="checkbox">Show overlay</checkbox>
-    <input id="name" value="">
 
-    <div style="display: flex">
-        <span style="flex: 0 0 60px">Jinrai</span>
-        <select id="jinrai"></select>
-        <input id="jinrai-score" style="width: 60px" min="0" max="2" type="number"></input>
-    </div>
-    <div style="display: flex">
-        <span style="flex: 0 0 60px">NSF</span>
-        <select id="nsf"></select>
-        <input id="nsf-score" style="width: 60px" min="0" max="2" type="number"></input>
+<body style="font-family: Verdana, Geneva, Tahoma, sans-serif">
+    <div id="manager" hidden="true">
+        <h1 id="server"></h1>
+        <input id="show" type="checkbox">Show branding</checkbox>
+        <input id="name" value="">
+
+        <div style="display: flex">
+            <span style="flex: 0 0 60px">Jinrai</span>
+            <select id="jinrai"></select>
+            <input id="jinrai-score" style="width: 60px" min="0" max="2" type="number"></input>
+        </div>
+        <div style="display: flex">
+            <span style="flex: 0 0 60px">NSF</span>
+            <select id="nsf"></select>
+            <input id="nsf-score" style="width: 60px" min="0" max="2" type="number"></input>
+            <br />
+        </div>
+
+        <a id="server-link" target="_blank">Join server</a>
+        <br />
+        <a id="overlay-link" target="_blank">Go to overlay</a>
+        <br />
         <br />
     </div>
 
+    <div id="list">
+    </div>
+
     <script>
-(async () => {
+        (async () => {
 
-    const teams = [
-        {
-            name: '',
-            tag: 'Jinrai',
-            logo: 'jinrai.png'
-        },
-        {
-            name: '',
-            tag: 'NSF',
-            logo: 'nsf.png'
-        },
-        {
-            name: 'AHNS', // 'All Hammer No Sickle',
-            tag: 'AHNS',
-            logo: 'ahns.png'
-        },
-        {
-            name: 'Ghost Brigade',
-            tag: 'GB',
-            logo: 'gb.webp'
-        },
-        {
-            name: 'Bonkurazu',
-            tag: 'BONK',
-            logo: 'bonk.png'
-        },
-        {
-            name: 'Ikko-Ikki',
-            tag: 'Ikko',
-            logo: 'ikko.png'
-        },
-        {
-            name: 'FLRK', // 'Foreign Legion of the Republic of Kazakhstan'
-            tag: 'FLRK',
-            logo: 'flrk.png'
-        },
-        {
-            name: 'Dys',
-            tag: 'DYS',
-            logo: 'dys.png'
-        },
-        {
-            name: 'Social Distancing',
-            tag: '-sD.',
-            logo: 'sd.png'
-        },
-        {
-            name: 'Winning Team',
-            tag: 'WIN',
-            logo: 'win.png'
-        },
-        {
-            name: 'CycheCect',
-            tag: 'C^2',
-            logo: 'C2.png'
-        },
-        // {
-        //     name: 'PIGA', // 'Pwyllgor Imperialaeth Gwrth-Americanaidd'
-        //     tag: 'PIGA',
-        //     logo: 'piga.png'
-        // },
-        // {
-        //     name: 'Warpig Gang',
-        //     tag: 'WPG',
-        //     logo: 'warpig.png'
-        // },
-        // {
-        //     name: 'ASNH', // 'All Sickle No Hammer',
-        //     tag: 'ASNH',
-        //     logo: 'asnh.png'
-        // },
-        // {
-        //     name: 'Road to deepfrog',
-        //     tag: 'dF',
-        //     logo: 'df.png'
-        // },
-        // {
-        //     name: 'JUMAISINBA',
-        //     tag: 'JUMA',
-        //     logo: 'juma.png'
-        // },
-        // {
-        //     name: 'NaT°',
-        //     tag: 'NaT',
-        //     logo: 'nat.png'
-        // },
-        // {
-        //     name: 'FD',
-        //     tag: 'FD',
-        //     logo: 'fd.png'
-        // },
-        // {
-        //     name: 'WH',
-        //     tag: 'WH',
-        //     logo: 'whg.png'
-        // },
-        // {
-        //     name: 'Fumco',
-        //     tag: 'Fumco',
-        //     logo: 'fumco.jpg'
-        // },
-        // {
-        //     name: 'Rust is a Must',
-        //     tag: 'RUST',
-        //     logo: 'rust.png'
-        // },
-        // {
-        //     name: 'Ikki-Okki',
-        //     tag: 'Okki',
-        //     logo: 'okki.png'
-        // },
-    ];
+            const teams = [
+                {
+                    name: '',
+                    tag: 'Jinrai',
+                    logo: 'jinrai.png'
+                },
+                {
+                    name: '',
+                    tag: 'NSF',
+                    logo: 'nsf.png'
+                },
+                {
+                    name: 'AHNS', // 'All Hammer No Sickle',
+                    tag: 'AHNS',
+                    logo: 'ahns.png'
+                },
+                {
+                    name: 'Ghost Brigade',
+                    tag: 'GB',
+                    logo: 'gb.webp'
+                },
+                {
+                    name: 'Bonkurazu',
+                    tag: 'BONK',
+                    logo: 'bonk.png'
+                },
+                {
+                    name: 'Ikko-Ikki',
+                    tag: 'Ikko',
+                    logo: 'ikko.png'
+                },
+                {
+                    name: 'FLRK', // 'Foreign Legion of the Republic of Kazakhstan'
+                    tag: 'FLRK',
+                    logo: 'flrk.png'
+                },
+                {
+                    name: 'Dys',
+                    tag: 'DYS',
+                    logo: 'dys.png'
+                },
+                {
+                    name: 'Social Distancing',
+                    tag: '-sD.',
+                    logo: 'sd.png'
+                },
+                {
+                    name: 'Winning Team',
+                    tag: 'WIN',
+                    logo: 'win.png'
+                },
+                {
+                    name: 'CycheCect',
+                    tag: 'C^2',
+                    logo: 'C2.png'
+                },
+                // {
+                //     name: 'PIGA', // 'Pwyllgor Imperialaeth Gwrth-Americanaidd'
+                //     tag: 'PIGA',
+                //     logo: 'piga.png'
+                // },
+                // {
+                //     name: 'Warpig Gang',
+                //     tag: 'WPG',
+                //     logo: 'warpig.png'
+                // },
+                // {
+                //     name: 'ASNH', // 'All Sickle No Hammer',
+                //     tag: 'ASNH',
+                //     logo: 'asnh.png'
+                // },
+                // {
+                //     name: 'Road to deepfrog',
+                //     tag: 'dF',
+                //     logo: 'df.png'
+                // },
+                // {
+                //     name: 'JUMAISINBA',
+                //     tag: 'JUMA',
+                //     logo: 'juma.png'
+                // },
+                // {
+                //     name: 'NaT°',
+                //     tag: 'NaT',
+                //     logo: 'nat.png'
+                // },
+                // {
+                //     name: 'FD',
+                //     tag: 'FD',
+                //     logo: 'fd.png'
+                // },
+                // {
+                //     name: 'WH',
+                //     tag: 'WH',
+                //     logo: 'whg.png'
+                // },
+                // {
+                //     name: 'Fumco',
+                //     tag: 'Fumco',
+                //     logo: 'fumco.jpg'
+                // },
+                // {
+                //     name: 'Rust is a Must',
+                //     tag: 'RUST',
+                //     logo: 'rust.png'
+                // },
+                // {
+                //     name: 'Ikki-Okki',
+                //     tag: 'Okki',
+                //     logo: 'okki.png'
+                // },
+            ];
 
-    const teamsDict = teams.reduce((dict, team) => {
-        dict[team.tag] = team;
-        return dict;
-    }, {});
+            const teamsDict = teams.reduce((dict, team) => {
+                dict[team.tag] = team;
+                return dict;
+            }, {});
 
-    const state = {};
+            const state = {};
 
-    const showCheckbox = document.getElementById('show');
-    const tournamentName = document.getElementById('name');
-    const jinraiDropdown = document.getElementById('jinrai');
-    const jinraiScoreInput = document.getElementById('jinrai-score');
-    const nsfDropdown = document.getElementById('nsf');
-    const nsfScoreInput = document.getElementById('nsf-score');
+            const listContent = document.getElementById('list');
+            const managerContent = document.getElementById('manager');
+            const serverName = document.getElementById('server');
+            const showCheckbox = document.getElementById('show');
+            const tournamentName = document.getElementById('name');
+            const jinraiDropdown = document.getElementById('jinrai');
+            const jinraiScoreInput = document.getElementById('jinrai-score');
+            const nsfDropdown = document.getElementById('nsf');
+            const nsfScoreInput = document.getElementById('nsf-score');
+            const serverLink = document.getElementById('server-link');
+            const overlayLink = document.getElementById('overlay-link');
 
-    const fetchState = async () => {
-        // const res = await fetch('http://' + window.location.hostname + ':3000/state');
-        const res = await fetch('/state');
-        const data = await res.json();
-        Object.assign(state, data);
-    };
+            const serverAddress = new URLSearchParams(window.location.search).get('server');
 
-    try {
-        await fetchState();
-    } catch (e) {
-        console.log(e);
-    }
+            const serverList = [];
+            const fetchList = async () => {
+                try {
+                    const res = await fetch('/servers');
+                    const serverList = await res.json();
 
-    const appendOpts = dropdown => {
-        teams.forEach(team => {
-            const opt = document.createElement('option');
-            opt.value = team.tag;
-            opt.innerHTML = `[${team.tag}] ${team.name}`;
-            dropdown.append(opt);
-        });
-    };
+                    serverList.forEach(server => {
+                        const link = document.createElement('a');
+                        const search = new URLSearchParams();
+                        const location = new URL(window.location.href);
+                        location.search = new URLSearchParams({ server: server.overlayAddress });
+                        link.href = location.href;
+                        link.innerText = server.serverName;
 
-    const applyState = state => {
-        showCheckbox.checked = state.show;
-        tournamentName.value = state.name;
+                        listContent.append(link, document.createElement('br'));
+                    });
 
-        jinraiDropdown.value = state.jinrai.tag;
-        jinraiScoreInput.value = state.jinrai.score;
+                } catch (e) {
+                    console.log(e);
+                }
+            };
+            fetchList();
 
-        nsfDropdown.value = state.nsf.tag;
-        nsfScoreInput.value = state.nsf.score;
-    }
+            if (serverAddress) {
+                managerContent.hidden = false;
+                const fetchState = async () => {
+                    // const res = await fetch(`http://${window.location.hostname}:3000/state/${serverAddress}`);
+                    const res = await fetch('/state/' + serverAddress);
+                    const data = await res.json();
+                    Object.assign(state, data);
+                };
 
-    const pushState = (state) => {
-        // fetch('http://' + window.location.hostname + ':3000/state', {
-        fetch('/state', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(state)
-        });
-    }
+                try {
+                    await fetchState();
+                } catch (e) {
+                    console.log(e);
+                }
 
-    const getState = () => {
-        const newState = {
-            show: showCheckbox.checked,
-            name: tournamentName.value,
-            jinrai: teamsDict[jinraiDropdown.value],
-            nsf: teamsDict[nsfDropdown.value]
-        }
-        newState.jinrai.score = jinraiScoreInput.value;
-        newState.nsf.score = nsfScoreInput.value;
+                const appendOpts = dropdown => {
+                    teams.forEach(team => {
+                        const opt = document.createElement('option');
+                        opt.value = team.tag;
+                        opt.innerHTML = `[${team.tag}] ${team.name}`;
+                        dropdown.append(opt);
+                    });
+                };
 
-        Object.assign(state, newState);
+                const applyState = state => {
+                    serverName.innerText = state.serverName;
 
-        return state;
-    }
+                    showCheckbox.checked = state.show;
+                    tournamentName.value = state.name;
 
-    appendOpts(jinraiDropdown);
-    appendOpts(nsfDropdown);
+                    jinraiDropdown.value = state.jinrai.tag;
+                    jinraiScoreInput.value = state.jinrai.score;
 
-    applyState(state);
+                    nsfDropdown.value = state.nsf.tag;
+                    nsfScoreInput.value = state.nsf.score;
 
-    // const ws = new WebSocket('ws://' + window.location.hostname + ':3000/state');
-    const ws = new WebSocket('ws://' + window.location.host + '/state');
-    ws.addEventListener('message', event => {
-        const data = JSON.parse(event.data);
-        applyState(data);
-    });
+                    serverLink.href = 'steam://connect/' + state.serverAddress;
 
-    const onChange = evt => {
-        const state = getState();
-        pushState(state);
-    };
+                    const overlayUrl = new URL(window.location);
+                    overlayUrl.pathname = '/overlay';
+                    overlayLink.href = overlayUrl.href;
+                };
 
-    showCheckbox.onchange = onChange;
-    tournamentName.onchange = onChange;
-    jinraiDropdown.onchange = onChange;
-    jinraiScoreInput.onchange = onChange;
-    nsfDropdown.onchange = onChange;
-    nsfScoreInput.onchange = onChange;
-})();
+                const pushState = (state) => {
+                    // fetch(`http://${window.location.hostname}:3000/state/${serverAddress}`, {
+                    fetch(`/state/${serverAddress}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(state)
+                    });
+                };
+
+                const getState = () => {
+                    const newState = {
+                        show: showCheckbox.checked,
+                        name: tournamentName.value,
+                        jinrai: teamsDict[jinraiDropdown.value],
+                        nsf: teamsDict[nsfDropdown.value]
+                    };
+                    newState.jinrai.score = jinraiScoreInput.value;
+                    newState.nsf.score = nsfScoreInput.value;
+
+                    Object.assign(state, newState);
+
+                    return state;
+                };
+
+                appendOpts(jinraiDropdown);
+                appendOpts(nsfDropdown);
+
+                applyState(state);
+
+                // const ws = new WebSocket(`ws://${window.location.hostname}:3000/state/${serverAddress}`);
+                const ws = new WebSocket(`ws://${window.location.host}/state/${serverAddress}`);
+                ws.addEventListener('message', event => {
+                    const data = JSON.parse(event.data);
+                    applyState(data);
+                });
+
+                const onChange = evt => {
+                    const state = getState();
+                    pushState(state);
+                };
+
+                showCheckbox.onchange = onChange;
+                tournamentName.onchange = onChange;
+                jinraiDropdown.onchange = onChange;
+                jinraiScoreInput.onchange = onChange;
+                nsfDropdown.onchange = onChange;
+                nsfScoreInput.onchange = onChange;
+            }
+        })();
     </script>
 </body>
+
 </html>

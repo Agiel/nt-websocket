@@ -16,11 +16,11 @@
     "ws": "^8.12.0"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "7.19.1",
     "@vue/cli-plugin-babel": "~5.0.8",
     "@vue/cli-plugin-eslint": "~5.0.8",
     "@vue/cli-service": "~5.0.8",
     "@vue/compiler-sfc": "^3.2.45",
-    "@babel/eslint-parser": "7.19.1",
     "eslint": "^8.31.0",
     "eslint-plugin-vue": "^9.8.0"
   },

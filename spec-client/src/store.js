@@ -329,12 +329,12 @@ async function handleMessage(data) {
 }
 
 async function connect(ip) {
-    const ws = new WebSocket(ip);
+    const ws = new WebSocket('ws://' + ip);
     ws.addEventListener('message', event => handleMessage(event.data));
 
     const localWs = process.env.NODE_ENV === 'development'
-        ? new WebSocket('ws://' + window.location.hostname + ':3000/state')
-        : new WebSocket('ws://' + window.location.host + '/state');
+        ? new WebSocket(`ws://${window.location.hostname}:3000/state/${ip}`)
+        : new WebSocket(`ws://${window.location.host}/state/${ip}`);
     localWs.addEventListener('message', event => {
         const state = JSON.parse(event.data);
         store.showOverlay = state.show;
@@ -345,8 +345,8 @@ async function connect(ip) {
 
     try {
         const res = process.env.NODE_ENV === 'development'
-            ? await fetch('http://' + window.location.hostname + ':3000/state')
-            : await fetch('/state');
+            ? await fetch(`http://${window.location.hostname}:3000/state/${ip}`)
+            : await fetch(`/state/${ip}`);
         const state = await res.json();
         store.showOverlay = state.show;
         store.tournamentName = state.name;

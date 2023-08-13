@@ -14,16 +14,11 @@ app.use('/overlay', express.static('dist'));
 app.use(cors());
 app.use(express.json());
 
-const wsServer = new ws.Server({
-    noServer: true,
-    clientTracking: true
-});
-
 const avatarCache = {};
 
-const overlayState = {
+const overlayStateTemplate = {
     show: true,
-    name: 'Winter Warzone 2023',
+    name: 'Summer Skirmish 2023',
     jinrai: {
         name: '',
         tag: 'Jinrai',
@@ -37,6 +32,33 @@ const overlayState = {
         score: 0
     }
 };
+
+const serverMap = {};
+const serverList = [
+    ['bonAHNSa.com', '74.91.123.81', '27015', '12346'],
+    ['sweaty and tryhard', '185.107.96.11', '27015', '12346'],
+    ['baux.site', '128.140.0.50', '27015', '12346'],
+    ['Agiel\'s', '98.128.173.190', '27015', '12346'],
+].map((server) => {
+    const serverInfo = {
+        overlayState: {
+            ...structuredClone(overlayStateTemplate),
+            serverName: server[0],
+            serverAddress: `${server[1]}:${server[2]}`,
+            overlayAddress: `${server[1]}:${server[3]}`,
+        },
+        wsServer: new ws.Server({
+            noServer: true,
+            clientTracking: true
+        })
+    };
+    serverMap[serverInfo.overlayState.overlayAddress] = serverInfo;
+    return serverInfo;
+});
+
+app.get('/servers', (req, res) => {
+    res.send(serverList.map(list => list.overlayState));
+});
 
 app.get('/avatar/:steamIds', (req, res) => {
     const steamIds = req.params.steamIds.split(',');
@@ -82,11 +104,22 @@ app.get('/avatar/:steamIds', (req, res) => {
     }
 });
 
-app.get('/state', (req, res) => {
+function getOverlayState(server) {
+    const overlayState = serverMap[server]?.overlayState;
+    if (!overlayState) {
+        throw new Error('Invalid server ' + JSON.stringify(server));
+    }
+    return overlayState;
+}
+
+app.get('/state/:server', (req, res) => {
+    const overlayState = getOverlayState(req.params.server);
     res.send(overlayState);
 });
 
-app.post('/state', (req, res) => {
+app.post('/state/:server', (req, res) => {
+    const overlayState = getOverlayState(req.params.server);
+
     if (typeof req.body.show == 'boolean') {
         overlayState.show = req.body.show;
     }
@@ -102,7 +135,7 @@ app.post('/state', (req, res) => {
             tag: jinrai.tag ?? overlayState.jinrai.tag,
             logo: jinrai.logo ?? overlayState.jinrai.logo,
             score: jinrai.score ?? overlayState.jinrai.score
-        }
+        };
     }
     const nsf = req.body.nsf;
     if (typeof nsf == 'object') {
@@ -111,24 +144,27 @@ app.post('/state', (req, res) => {
             tag: nsf.tag ?? overlayState.nsf.tag,
             logo: nsf.logo ?? overlayState.nsf.logo,
             score: nsf.score ?? overlayState.nsf.score
-        }
+        };
     }
 
     res.send(overlayState);
 
-    wsServer.clients.forEach(ws => ws.send(JSON.stringify(overlayState)));
+    serverMap[req.params.server].wsServer.clients.forEach(ws => ws.send(JSON.stringify(overlayState)));
 });
 
 const server = app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
-
-wsServer.on('connection', socket => {
-    socket.on('message', message => console.log(message));
+    console.log(`Server listening at http://localhost:${port}`);
 });
 
 server.on('upgrade', (req, socket, head) => {
-    if (req.url == '/state') {
+    if (req.url.startsWith('/state')) {
+        const server = req.url.slice(req.url.lastIndexOf('/') + 1);
+        const wsServer = serverMap[server]?.wsServer;
+        if (!wsServer) {
+            console.log('Invalid server ' + JSON.stringify(server));
+            socket.destroy();
+            return;
+        }
         wsServer.handleUpgrade(req, socket, head, socket => {
             wsServer.emit('connection', socket, req);
         });

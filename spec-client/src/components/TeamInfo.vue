@@ -30,6 +30,7 @@ import { store } from "../store";
     top: 0;
     left: 0;
     width: 1920px;
+    display: flex;
 }
 
 .jinrai,
