@@ -31,6 +31,7 @@ import { store } from "../store";
     left: 0;
     width: 1920px;
     display: flex;
+    overflow: hidden;
 }
 
 .jinrai,
@@ -55,10 +56,10 @@ import { store } from "../store";
 
 .mapname {
     position: absolute;
-    top: 16px;
+    top: 12px;
     right: 20px;
     font-family: xscale;
-    font-size: 18px;
+    font-size: 19px;
     color: white;
     opacity: 0.8;
 }

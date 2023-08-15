@@ -38,7 +38,7 @@ const serverList = [
     ['bonAHNSa.com', '74.91.123.81', '27015', '12346'],
     ['sweaty and tryhard', '185.107.96.11', '27015', '12346'],
     ['baux.site', '128.140.0.50', '27015', '12346'],
-    ['Agiel\'s', '98.128.173.190', '27015', '12346'],
+    // ['Agiel\'s', '98.128.173.190', '27015', '12346'],
 ].map((server) => {
     const serverInfo = {
         overlayState: {

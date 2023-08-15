@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="app">
         <TournamentOverlay v-if="showOverlay"></TournamentOverlay>
         <TeamInfo></TeamInfo>
         <div id="round-info">
@@ -7,7 +7,7 @@
             <div id="round-timer">{{ roundTimeLeft }}</div>
         </div>
         <div id="container">
-            <div class="jinrai">
+            <div class="players jinrai">
                 <PlayerPanel
                     v-for="player in jinrai"
                     :data="player"
@@ -16,7 +16,7 @@
                 ></PlayerPanel>
             </div>
             <div id="spacer"></div>
-            <div class="nsf">
+            <div class="players nsf">
                 <PlayerPanel
                     v-for="player in nsf"
                     :data="player"
@@ -62,23 +62,38 @@ const showOverlay = computed(() => store.showOverlay);
 body {
     background-color: #222;
     width: 1920px;
+    height: 1080px;
+    margin: 0;
 }
+
+.app {
+    height: 100%;
+}
+
 #app {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-align: center;
     color: #2c3e50;
+    box-sizing: border-box;
     padding: 12px;
+    height: 100%;
 }
 
 #container {
-    margin-top: 300px;
+    height: 100%;
     display: flex;
 }
 
 #spacer {
     flex: 1 1 auto;
+}
+
+.players {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .jinrai {
@@ -136,13 +151,13 @@ body {
     width: 1920px;
     margin-top: 36px;
     font-family: xscale;
-    font-size: 28px;
+    font-size: 24px;
     color: white;
     line-height: 0.75;
 }
 
 #round-timer {
-    font-size: 40px;
+    font-size: 42px;
 }
 
 #debug {
