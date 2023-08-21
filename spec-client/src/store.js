@@ -162,6 +162,8 @@ async function handleMessage(data) {
         }
         // * I: Initial child socket connect. Sends game and map
         case 'I': {
+            console.log(`Connection to "${parts[4]}" established.`);
+            document.title = parts[4];
             store.currentMap = parts[1];
 
             break;
@@ -329,19 +331,33 @@ async function handleMessage(data) {
 }
 
 async function connect(ip) {
-    const ws = new WebSocket('ws://' + ip);
-    ws.addEventListener('message', event => handleMessage(event.data));
+    const connectWs = () => {
+        const ws = new WebSocket('ws://' + ip);
+        ws.addEventListener('message', event => handleMessage(event.data));
+        ws.addEventListener("close", async (event) => {
+            store.players = [];
+            if (!event.wasClean) {
+                console.log("Lost connection to game server. Retrying...");
+                connectWs();
+            }
+        });
+    };
+    connectWs();
 
-    const localWs = process.env.NODE_ENV === 'development'
-        ? new WebSocket(`ws://${window.location.hostname}:3000/state/${ip}`)
-        : new WebSocket(`ws://${window.location.host}/state/${ip}`);
-    localWs.addEventListener('message', event => {
-        const state = JSON.parse(event.data);
-        store.showOverlay = state.show;
-        store.tournamentName = state.name;
-        store.jinrai = state.jinrai;
-        store.nsf = state.nsf;
-    });
+    try {
+        const localWs = process.env.NODE_ENV === 'development'
+            ? new WebSocket(`ws://${window.location.hostname}:3000/state/${ip}`)
+            : new WebSocket(`ws://${window.location.host}/state/${ip}`);
+        localWs.addEventListener('message', event => {
+            const state = JSON.parse(event.data);
+            store.showOverlay = state.show;
+            store.tournamentName = state.name;
+            store.jinrai = state.jinrai;
+            store.nsf = state.nsf;
+        });
+    } catch (e) {
+        console.error("Error connecting to manager.", e);
+    }
 
     try {
         const res = process.env.NODE_ENV === 'development'
@@ -355,6 +371,7 @@ async function connect(ip) {
     } catch (e) {
         console.error("Error fetching match state", e);
     }
+
 }
 
 window.debug = {

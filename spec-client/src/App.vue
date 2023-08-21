@@ -1,9 +1,9 @@
 <template>
     <div class="app">
-        <TournamentOverlay v-if="showOverlay"></TournamentOverlay>
+        <TournamentOverlay v-if="store.showOverlay"></TournamentOverlay>
         <TeamInfo></TeamInfo>
         <div id="round-info">
-            <div id="round-counter">Round {{ roundCount }}</div>
+            <div id="round-counter">Round {{ store.roundNumber }}</div>
             <div id="round-timer">{{ roundTimeLeft }}</div>
         </div>
         <div id="container">
@@ -12,7 +12,7 @@
                     v-for="player in jinrai"
                     :data="player"
                     :key="player.userId"
-                    :highlight="player.clientId == observerTarget"
+                    :highlight="player.clientId == store.observerTarget"
                 ></PlayerPanel>
             </div>
             <div id="spacer"></div>
@@ -21,7 +21,7 @@
                     v-for="player in nsf"
                     :data="player"
                     :key="player.userId"
-                    :highlight="player.clientId == observerTarget"
+                    :highlight="player.clientId == store.observerTarget"
                 ></PlayerPanel>
             </div>
         </div>
@@ -46,16 +46,12 @@ const jinrai = computed(() =>
 const nsf = computed(() =>
     players.value.filter((player) => player.team == "NSF")
 );
-const roundCount = computed(() => +store.roundNumber + 1);
 const roundTimeLeft = computed(
     () =>
         `${Math.floor(store.roundTimeLeft / 60)}:${String(
             store.roundTimeLeft % 60
         ).padStart(2, "0")}`
 );
-
-const observerTarget = computed(() => store.observerTarget);
-const showOverlay = computed(() => store.showOverlay);
 </script>
 
 <style>
