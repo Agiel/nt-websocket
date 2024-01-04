@@ -1,15 +1,12 @@
 <template>
     <div class="overlay">
         <img class="overlay-image" src="../assets/overlay.png" />
-        <div class="tournament-name">{{ tournamentName }}</div>
+        <!-- <div class="tournament-name">{{ store.tournamentName }}</div> -->
     </div>
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { store } from "../store";
-
-const tournamentName = computed(() => store.tournamentName);
+// import { store } from "../store";
 </script>
 
 <style scoped>

@@ -2,6 +2,7 @@
 
 // Changeolg
 
+// 1.5 - Send ghost overtime.
 // 1.4 - Send team scores with round number. Send round timer.
 // 1.3.1 - Also send veto map list at veto start
 // 1.3 - Map vetos
@@ -30,7 +31,7 @@
  * D: Player disconnected
  * E: Player equipped weapon
  * F: Player fired gun
- * G:
+ * G: Ghost overtime toggled
  * H: Player was hurt
  * I: Initial child socket connect. Sends game and map
  * J:
@@ -44,7 +45,7 @@
  * R: Round start
  * S: Player spawned
  * T: Player changed team
- * U:
+ * U: Player dropped weapon
  * V: ConVar changed
  * W: Player switched to weapon
  * X: Chat message
@@ -60,7 +61,7 @@
 #include <nt_competitive_vetos_enum>
 #include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.4.0"
+#define PLUGIN_VERSION "1.5.0"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -85,6 +86,9 @@ int g_currentObserver = 0;
 int g_currentObserverTarget = 0;
 
 int g_roundTimeLeft = 0;
+
+bool g_ghostHeld = false;
+bool g_ghostOvertimeEngaged = false;
 
 #if NT_RELAY_DEBUG
 int g_maxFakeClients = 10;
@@ -162,6 +166,16 @@ public OnGameFrame()
 		g_roundTimeLeft = timeLeft;
 		char sBuffer[6];
 		Format(sBuffer,sizeof(sBuffer), "B%d", timeLeft);
+		SendToAllChildren(sBuffer);
+	}
+
+	int gameState = GameRules_GetProp("m_iGameState");
+	bool ghostOvertimeEngaged = gameState == GAMESTATE_ROUND_ACTIVE && timeLeft <= 15.0 && g_ghostHeld;
+	if (ghostOvertimeEngaged != g_ghostOvertimeEngaged)
+	{
+		g_ghostOvertimeEngaged = ghostOvertimeEngaged;
+		char sBuffer[3];
+		Format(sBuffer,sizeof(sBuffer), "G%d", g_ghostOvertimeEngaged);
 		SendToAllChildren(sBuffer);
 	}
 }
@@ -438,7 +452,8 @@ public OnClientPutInServer(client)
 	g_playerDeaths[client] = GetClientDeaths(client);
 
 	SDKHook(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
-	//SDKHook(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
+	// SDKHook(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
+	// SDKHook(client, SDKHook_WeaponDropPost, Event_OnWeaponDrop);
 
 	// SDKHook(client, SDKHook_FireBulletsPost, OnFireBulletsPost);
 
@@ -621,6 +636,20 @@ public void Event_OnWeaponEquip(int client, int weapon)
 	Format(sBuffer, sizeof(sBuffer), "E%d:%s", userid, weaponName);
 
 	SendToAllChildren(sBuffer);
+	PrintToServer(sBuffer);
+}
+
+public void Event_OnWeaponDrop(int client, int weapon)
+{
+	int userid = GetClientUserId(client);
+
+	char weaponName[20];
+	GetEntityClassname(weapon, weaponName, sizeof(weaponName));
+
+	char sBuffer[32];
+	Format(sBuffer, sizeof(sBuffer), "U%d:%s", userid, weaponName);
+
+	SendToAllChildren(sBuffer);
 }
 
 public void Event_OnWeaponSwitch_Post(int client, int weapon)
@@ -635,6 +664,16 @@ public void Event_OnWeaponSwitch_Post(int client, int weapon)
 	Format(sBuffer, sizeof(sBuffer), "W%d:%s", userid, weaponName);
 
 	SendToAllChildren(sBuffer);
+}
+
+public void OnGhostPickUp(int client)
+{
+	g_ghostHeld = true;
+}
+
+public void OnGhostDrop(int client)
+{
+	g_ghostHeld = false;
 }
 
 public Action:CmdLstnr_Say(client, const String:command[], argc)

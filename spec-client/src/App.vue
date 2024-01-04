@@ -4,7 +4,8 @@
         <TeamInfo></TeamInfo>
         <div id="round-info">
             <div id="round-counter">Round {{ store.roundNumber }}</div>
-            <div id="round-timer">{{ roundTimeLeft }}</div>
+            <div id="round-timer" :class="{ glitch: store.ghostOvertime, layers: store.ghostOvertime }" :data-text="roundTimeLeft">{{ roundTimeLeft }}</div>
+            <div id="round-overtime" class="glitch layers" :hidden="!store.ghostOvertime" data-text="Overtime">Overtime</div>
         </div>
         <div id="container">
             <div class="players jinrai">
@@ -145,7 +146,7 @@ body {
     left: 0;
     top: 0;
     width: 1920px;
-    margin-top: 36px;
+    margin-top: 32px;
     font-family: xscale;
     font-size: 24px;
     color: white;
@@ -153,7 +154,12 @@ body {
 }
 
 #round-timer {
-    font-size: 42px;
+    font-size: 46px;
+}
+
+#round-overtime {
+    margin-top: 2px;
+    font-size: 21px;
 }
 
 #debug {

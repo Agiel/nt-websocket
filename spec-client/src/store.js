@@ -153,6 +153,11 @@ async function handleMessage(data) {
 
             break;
         }
+        // *G: Toggle ghost overtime
+        case 'G': {
+            store.ghostOvertime = parts[0] === '1';
+            break;
+        }
         // * H: Player was hurt
         case 'H': {
             const player = uidToPlayer[parts[0]];
