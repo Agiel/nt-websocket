@@ -137,7 +137,7 @@ body {
     background: linear-gradient(-90deg, rgb(72, 122, 202), rgb(143, 193, 243));
 }
 
-.nsf .weapon-icon {
+.nsf .weapons-container {
     transform: scaleX(-1);
 }
 

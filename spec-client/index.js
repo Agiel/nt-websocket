@@ -39,6 +39,8 @@ const serverList = [
     ['sweaty and tryhard', '185.107.96.11', '27015', '12346'],
     ['baux.site', '128.140.0.50', '27015', '12346'],
     // ['Agiel\'s', '98.128.173.190', '27015', '12346'],
+    ['Agiel\'s', '192.168.1.128', '27015', '12346'],
+
 ].map((server) => {
     const serverInfo = {
         overlayState: {
@@ -86,16 +88,18 @@ app.get('/avatar/:steamIds', (req, res) => {
             });
 
             resp.on('end', () => {
+                try {
                 const json = JSON.parse(data);
-                if (json != null && json.response != null && json.response.players != null) {
-                    for (let player of json.response.players) {
-                        avatarCache[player.steamid] = {
-                            timestamp: now,
-                            avatar: player.avatarmedium,
-                        };
-                        response[player.steamid] = player.avatarmedium;
+                    if (json != null && json.response != null && json.response.players != null) {
+                        for (let player of json.response.players) {
+                            avatarCache[player.steamid] = {
+                                timestamp: now,
+                                avatar: player.avatarmedium,
+                            };
+                            response[player.steamid] = player.avatarmedium;
+                        }
                     }
-                }
+                } catch {}
                 res.send(response);
             });
         });

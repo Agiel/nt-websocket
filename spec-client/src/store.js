@@ -25,7 +25,7 @@ const VETOSTAGES = [
     "CoinFlipResult",
 ];
 
-const store = reactive({
+export const store = reactive({
     players: [],
     roundTimeLeft: 0,
     roundNumber: 0,
@@ -88,6 +88,84 @@ function getAvatarURL(player) {
     getAvatarURLsDebounced();
 }
 
+const weapon_list = [
+    "aa13",
+    "ghost",
+    "grenade",
+    "jitte",
+    "jittescoped",
+    "knife",
+    "kyla",
+    "m41",
+    "m41s",
+    "milso",
+    "mp5",
+    "mpn",
+    "mx",
+    "mx_silenced",
+    "pz",
+    "remotedet",
+    "smac",
+    "smokegrenade",
+    "spidermine",
+    "srm",
+    "srm_s",
+    "srs",
+    "supa7",
+    "tachi",
+    "zr68c",
+    "zr68l",
+    "zr68s"
+];
+
+const weapon_type = {
+    aa13: "primary",
+    ghost: "ghost",
+    grenade: "utility",
+    jitte: "primary",
+    jittescoped: "primary",
+    knife: "knife",
+    kyla: "secondary",
+    m41: "primary",
+    m41s: "primary",
+    milso: "secondary",
+    mp5: "primary",
+    mpn: "primary",
+    mx: "primary",
+    mx_silenced: "primary",
+    pz: "primary",
+    remotedet: "utility",
+    smac: "utility",
+    smokegrenade: "utility",
+    spidermine: "utility",
+    srm: "primary",
+    srm_s: "primary",
+    srs: "primary",
+    supa7: "primary",
+    tachi: "secondary",
+    zr68c: "primary",
+    zr68l: "primary",
+    zr68: "primary",
+};
+
+function decodeWeaponBits(bits) {
+    bits = bits ?? 0;
+    const weapons = new Set();
+    let bit = 0;
+    while (bits > 0) {
+        if (bits % 2) {
+            weapons.add(weapon_list[bit]);
+        }
+        bits = bits >> 1;
+        bit++;
+    }
+    return weapons;
+}
+
+export function getWeaponType(weapon) {
+    return weapon_type[weapon];
+}
+
 async function handleMessage(data) {
     const type = data[0];
     const parts = data.slice(1).split(':');
@@ -113,6 +191,7 @@ async function handleMessage(data) {
                 class: CLASSES[parts[8]],
                 activeWeapon: parts[9].slice(7),
                 name: parts[10],
+                equippedWeapons: decodeWeaponBits(parts[11]),
             });
 
             if (!player.isAlive) {
@@ -145,6 +224,11 @@ async function handleMessage(data) {
             break;
         }
         // * E: Player equipped weapon
+        case 'E': {
+            const player = uidToPlayer[parts[0]];
+            player.equippedWeapons.add(parts[1].slice(7));
+            break;
+        }
         // * F: Player fired gun
         case 'F': {
             const player = uidToPlayer[parts[0]];
@@ -179,6 +263,7 @@ async function handleMessage(data) {
             player.isAlive = false;
             player.health = 0;
             player.activeWeapon = "";
+            player.equippedWeapons.clear();
 
             break;
         }
@@ -234,6 +319,7 @@ async function handleMessage(data) {
                 player.isSpawning = true;
                 player.health = 0;
                 player.activeWeapon = "";
+                player.equippedWeapons.clear();
             });
 
             break;
@@ -258,6 +344,13 @@ async function handleMessage(data) {
         case 'T': {
             const player = uidToPlayer[parts[0]];
             player.team = TEAMS[parts[1]];
+
+            break;
+        }
+        // * U: Player dropped weapon
+        case 'U': {
+            const player = uidToPlayer[parts[0]];
+            player.equippedWeapons.delete(parts[1].slice(7));
 
             break;
         }
@@ -335,7 +428,7 @@ async function handleMessage(data) {
     // console.log(data);
 }
 
-async function connect(ip) {
+export async function connect(ip) {
     const connectWs = () => {
         const ws = new WebSocket('ws://' + ip);
         ws.addEventListener('message', event => handleMessage(event.data));
@@ -380,10 +473,6 @@ async function connect(ip) {
 }
 
 window.debug = {
-    store
-};
-
-export {
-    connect as connect,
-    store as store,
+    store,
+    handleMessage
 };

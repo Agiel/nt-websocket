@@ -2,6 +2,7 @@
 
 // Changeolg
 
+// 1.6 - Send equip/drop weapon events.
 // 1.5 - Send ghost overtime.
 // 1.4 - Send team scores with round number. Send round timer.
 // 1.3.1 - Also send veto map list at veto start
@@ -18,8 +19,6 @@
 // Does throwing grenade trigger drop?
 
 // Separate XP, frags and assists? Might be hard to keep in sync with the comp plugin shenanigans.
-
-// Track shooting players
 
 // Players "spawning" mid round, usually after switching team, are reported as alive even if they're dead.
 
@@ -61,7 +60,7 @@
 #include <nt_competitive_vetos_enum>
 #include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.5.0"
+#define PLUGIN_VERSION "1.6.0"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -81,6 +80,7 @@ int g_iRoundNumber = -1;
 int g_playerXP[NEO_MAX_CLIENTS + 1];
 int g_playerDeaths[NEO_MAX_CLIENTS + 1];
 char g_playerActiveWeapon[NEO_MAX_CLIENTS + 1][20];
+int g_playerEquippedWeapons[NEO_MAX_CLIENTS + 1];
 
 int g_currentObserver = 0;
 int g_currentObserverTarget = 0;
@@ -93,6 +93,45 @@ bool g_ghostOvertimeEngaged = false;
 #if NT_RELAY_DEBUG
 int g_maxFakeClients = 10;
 #endif
+
+char weapon_list[][] = {
+		"weapon_aa13",
+		"weapon_ghost",
+		"weapon_grenade",
+		"weapon_jitte",
+		"weapon_jittescoped",
+		"weapon_knife",
+		"weapon_kyla",
+		"weapon_m41",
+		"weapon_m41s",
+		"weapon_milso",
+		"weapon_mp5",
+		"weapon_mpn",
+		"weapon_mx",
+		"weapon_mx_silenced",
+		"weapon_pz",
+		"weapon_remotedet",
+		"weapon_smac",
+		"weapon_smokegrenade",
+		"weapon_spidermine",
+		"weapon_srm",
+		"weapon_srm_s",
+		"weapon_srs",
+		"weapon_supa7",
+		"weapon_tachi",
+		"weapon_zr68c",
+		"weapon_zr68l",
+		"weapon_zr68s"
+	};
+
+int GetWeaponBit(char[] name) {
+	for (int i = 0; i < sizeof(weapon_list); i++) {
+		if (StrEqual(name, weapon_list[i])) {
+			return 1 << i;
+		}
+	}
+	return 0;
+}
 
 public Plugin:myinfo =
 {
@@ -280,35 +319,6 @@ public Action OnRelayWepsDebug(int client, int args)
 // Purpose: Delayed relay access to ensure correct execution order (could technically still go out of order, but good enough for debug).
 public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 {
-	new const String:weps[][] = {
-		"weapon_aa13",
-		"weapon_ghost",
-		"weapon_grenade",
-		"weapon_jitte",
-		"weapon_jittescoped",
-		"weapon_knife",
-		"weapon_kyla",
-		"weapon_m41",
-		"weapon_m41s",
-		"weapon_milso",
-		"weapon_mp5",
-		"weapon_mpn",
-		"weapon_mx",
-		"weapon_mx_silenced",
-		"weapon_pz",
-		"weapon_smac",
-		"weapon_smokegrenade",
-		"weapon_spidermine",
-		"weapon_srm",
-		"weapon_srm_s",
-		"weapon_srs",
-		"weapon_supa7",
-		"weapon_tachi",
-		"weapon_zr68c",
-		"weapon_zr68l",
-		"weapon_zr68s"
-	};
-
 	char sBuffer[128];
 
 	// Populate with fake players
@@ -333,8 +343,8 @@ public Action Timer_WepsDebug_AsyncRelay(Handle timer, int phase)
 			}
 			case 3:
 			{
-				int wep_index = (i - 1) % sizeof(weps); // cycle through weps for predictable position in the overlay, so it's easier to compare visually
-				Format(sBuffer, sizeof(sBuffer), "W%d:%s", i, weps[wep_index]);
+				int wep_index = (i - 1) % sizeof(weapon_list); // cycle through weapon_list for predictable position in the overlay, so it's easier to compare visually
+				Format(sBuffer, sizeof(sBuffer), "W%d:%s", i, weapon_list[wep_index]);
 			}
 			default:
 			{
@@ -452,8 +462,8 @@ public OnClientPutInServer(client)
 	g_playerDeaths[client] = GetClientDeaths(client);
 
 	SDKHook(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
-	// SDKHook(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
-	// SDKHook(client, SDKHook_WeaponDropPost, Event_OnWeaponDrop);
+	SDKHook(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);
+	SDKHook(client, SDKHook_WeaponDropPost, Event_OnWeaponDrop);
 
 	// SDKHook(client, SDKHook_FireBulletsPost, OnFireBulletsPost);
 
@@ -543,6 +553,8 @@ public Event_OnPlayerSpawn(Handle:event, const String:name[], bool:dontBroadcast
 
 	if (GetClientTeam(client) < 2)
 		return;
+
+	g_playerEquippedWeapons[client] = 0;
 
 	int class = GetPlayerClass(client);
 
@@ -636,7 +648,8 @@ public void Event_OnWeaponEquip(int client, int weapon)
 	Format(sBuffer, sizeof(sBuffer), "E%d:%s", userid, weaponName);
 
 	SendToAllChildren(sBuffer);
-	PrintToServer(sBuffer);
+
+	g_playerEquippedWeapons[client] += GetWeaponBit(weaponName);
 }
 
 public void Event_OnWeaponDrop(int client, int weapon)
@@ -650,6 +663,8 @@ public void Event_OnWeaponDrop(int client, int weapon)
 	Format(sBuffer, sizeof(sBuffer), "U%d:%s", userid, weaponName);
 
 	SendToAllChildren(sBuffer);
+
+	g_playerEquippedWeapons[client] -= GetWeaponBit(weaponName);
 }
 
 public void Event_OnWeaponSwitch_Post(int client, int weapon)
@@ -764,7 +779,7 @@ public OnWebsocketReadyStateChanged(WebsocketHandle:websocket, WebsocketReadySta
 		if(IsClientInGame(i))
 		{
 			GetClientAuthId(i, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
-			Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:%d:%d:%d:%d:%d:%s:%N", GetClientUserId(i), i, sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientFrags(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), g_playerActiveWeapon[i], i);
+			Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:%d:%d:%d:%d:%d:%s:%N:%d", GetClientUserId(i), i, sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientFrags(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), g_playerActiveWeapon[i], i, g_playerEquippedWeapons[i]);
 
 			Websocket_Send(websocket, SendType_Text, sBuffer);
 		}
@@ -781,6 +796,7 @@ public OnWebsocketMasterError(WebsocketHandle:websocket, const errorType, const 
 
 public OnWebsocketMasterClose(WebsocketHandle:websocket)
 {
+	PrintToServer("Websocket closed");
 	g_hListenSocket = INVALID_WEBSOCKET_HANDLE;
 }
 

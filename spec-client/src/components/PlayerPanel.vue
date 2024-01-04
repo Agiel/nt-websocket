@@ -35,6 +35,7 @@
                     ></div>
                 </div>
                 <div class="name">{{ data.name }}</div>
+                <div class="class">{{ className }}</div>
                 <div class="health align">{{ health }}</div>
 
                 <div class="break"></div>
@@ -48,18 +49,20 @@
                     </div>
                     <div class="deaths">{{ data.deaths }}</div>
                 </div>
-                <div class="class">{{ className }}</div>
                 <div class="spacer"></div>
-                <img
-                    class="weapon-icon"
-                    v-if="data.isAlive && data.activeWeapon && !hasGhost"
-                    :src="'icons/' + data.activeWeapon + '.svg'"
-                />
+                <div class="weapons-container align" v-if="data.isAlive">
+                    <img v-for="weapon in equippedWeapons" :key="weapon"
+                        class="weapon-icon"
+                        :class="{[getWeaponType(weapon)]: true, active: data.activeWeapon === weapon}"
+                        :src="'icons/' + weapon + '.svg'"
+                    />
+                </div>
             </div>
         </div>
         <div class="muzzleflash" :class="{ firing: data.isFiring }"></div>
         <img
             class="ghost"
+            :class="{ active: data.activeWeapon === 'ghost'}"
             v-if="data.isAlive && hasGhost"
             :src="'icons/ghost.svg'"
         />
@@ -68,6 +71,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { getWeaponType } from "../store";
 
 const props = defineProps({
     data: Object,
@@ -100,7 +104,11 @@ const rank = computed(() => {
     }
 });
 
-const hasGhost = computed(() => props.data.activeWeapon == "ghost");
+const hasGhost = computed(() => props.data.equippedWeapons.has("ghost"));
+
+const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].filter((w) => w !== 'ghost' && w !== 'knife').sort((a, b) =>
+    getWeaponType(b).localeCompare(getWeaponType(a))
+));
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
@@ -160,7 +168,7 @@ const hasGhost = computed(() => props.data.activeWeapon == "ghost");
     flex-wrap: wrap;
     align-items: center;
     box-sizing: border-box;
-    padding: 4px 12px;
+    padding: 4px 10px;
     position: relative;
     z-index: 10;
 }
@@ -174,7 +182,7 @@ const hasGhost = computed(() => props.data.activeWeapon == "ghost");
 }
 
 .class {
-    width: 104px;
+    width: 50px;
     font-size: 12px;
     color: #ddd;
     align-self: flex-end;
@@ -254,10 +262,22 @@ const hasGhost = computed(() => props.data.activeWeapon == "ghost");
 }
 
 .weapon-icon {
+    box-sizing: border-box;
     max-height: 22px;
-    max-width: 100px;
+    max-width: 78px;
     position: relative;
-    top: 2px;
+    top: 4px;
+    padding-inline: 2px;
+    opacity: 0.5;
+}
+
+.weapon-icon.utility, .weapon-icon.secondary {
+    max-height: 16px;
+    max-width: 36px;
+}
+
+.weapon-icon.active {
+    opacity: 1;
 }
 
 .muzzleflash {
@@ -276,6 +296,11 @@ const hasGhost = computed(() => props.data.activeWeapon == "ghost");
 
 .ghost {
     align-self: center;
+    opacity: 0.6;
+}
+
+.ghost.active {
+    opacity: 1;
 }
 
 @keyframes onPlayerDead {
