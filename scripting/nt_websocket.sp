@@ -2,6 +2,7 @@
 
 // Changeolg
 
+// 1.6.2 - They're less reliable than I thought, so make sure the ghost is considered unheld at round start.
 // 1.6.1 - Use ghostcap events for the ghost since they're more reliable
 // 1.6 - Send equip/drop weapon events.
 // 1.5 - Send ghost overtime.
@@ -61,7 +62,7 @@
 #include <nt_competitive_vetos_enum>
 #include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.6.1"
+#define PLUGIN_VERSION "1.6.2"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -581,6 +582,8 @@ public Event_OnPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 
 public Event_OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	g_ghostHeld = false;
+
 	new iSize = GetArraySize(g_hChildren);
 	if(iSize == 0)
 		return;
