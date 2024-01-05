@@ -2,6 +2,7 @@
 
 // Changeolg
 
+// 1.6.1 - Use ghostcap events for the ghost since they're more reliable
 // 1.6 - Send equip/drop weapon events.
 // 1.5 - Send ghost overtime.
 // 1.4 - Send team scores with round number. Send round timer.
@@ -60,7 +61,7 @@
 #include <nt_competitive_vetos_enum>
 #include <nt_competitive_vetos_natives>
 
-#define PLUGIN_VERSION "1.6.0"
+#define PLUGIN_VERSION "1.6.1"
 
 #define NEO_MAX_CLIENTS 32
 
@@ -644,6 +645,11 @@ public void Event_OnWeaponEquip(int client, int weapon)
 	char weaponName[20];
 	GetEntityClassname(weapon, weaponName, sizeof(weaponName));
 
+	if (StrEqual(weaponName, "weapon_ghost"))
+	{
+		return;
+	}
+
 	char sBuffer[32];
 	Format(sBuffer, sizeof(sBuffer), "E%d:%s", userid, weaponName);
 
@@ -658,6 +664,11 @@ public void Event_OnWeaponDrop(int client, int weapon)
 
 	char weaponName[20];
 	GetEntityClassname(weapon, weaponName, sizeof(weaponName));
+
+	if (StrEqual(weaponName, "weapon_ghost"))
+	{
+		return;
+	}
 
 	char sBuffer[32];
 	Format(sBuffer, sizeof(sBuffer), "U%d:%s", userid, weaponName);
@@ -684,11 +695,28 @@ public void Event_OnWeaponSwitch_Post(int client, int weapon)
 public void OnGhostPickUp(int client)
 {
 	g_ghostHeld = true;
+
+	int userid = GetClientUserId(client);
+	g_playerEquippedWeapons[client] += GetWeaponBit("weapon_ghost");
+
+	char sBuffer[32];
+	Format(sBuffer, sizeof(sBuffer), "E%d:%s", userid, "weapon_ghost");
+
+	SendToAllChildren(sBuffer);
+
 }
 
 public void OnGhostDrop(int client)
 {
 	g_ghostHeld = false;
+
+	int userid = GetClientUserId(client);
+	g_playerEquippedWeapons[client] -= GetWeaponBit("weapon_ghost");
+
+	char sBuffer[32];
+	Format(sBuffer, sizeof(sBuffer), "U%d:%s", userid, "weapon_ghost");
+
+	SendToAllChildren(sBuffer);
 }
 
 public Action:CmdLstnr_Say(client, const String:command[], argc)

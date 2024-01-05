@@ -37,9 +37,8 @@ const serverMap = {};
 const serverList = [
     ['bonAHNSa.com', '74.91.123.81', '27015', '12346'],
     ['sweaty and tryhard', '185.107.96.11', '27015', '12346'],
-    ['baux.site', '128.140.0.50', '27015', '12346'],
+    ['baux.site', '159.69.19.20', '3331', '12346'],
     // ['Agiel\'s', '98.128.173.190', '27015', '12346'],
-    ['Agiel\'s', '192.168.1.128', '27015', '12346'],
 
 ].map((server) => {
     const serverInfo = {
@@ -89,7 +88,7 @@ app.get('/avatar/:steamIds', (req, res) => {
 
             resp.on('end', () => {
                 try {
-                const json = JSON.parse(data);
+                    const json = JSON.parse(data);
                     if (json != null && json.response != null && json.response.players != null) {
                         for (let player of json.response.players) {
                             avatarCache[player.steamid] = {
@@ -99,7 +98,7 @@ app.get('/avatar/:steamIds', (req, res) => {
                             response[player.steamid] = player.avatarmedium;
                         }
                     }
-                } catch {}
+                } catch { }
                 res.send(response);
             });
         });

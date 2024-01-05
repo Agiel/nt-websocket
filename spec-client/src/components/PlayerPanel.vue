@@ -191,7 +191,7 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 }
 
 .health {
-    width: 60px;
+    width: 50px;
     color: #eee;
     text-align: center;
 }
@@ -263,17 +263,18 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 
 .weapon-icon {
     box-sizing: border-box;
-    max-height: 22px;
-    max-width: 78px;
-    position: relative;
-    top: 4px;
-    padding-inline: 2px;
-    opacity: 0.5;
-}
-
-.weapon-icon.utility, .weapon-icon.secondary {
     max-height: 16px;
     max-width: 36px;
+    position: relative;
+    top: 4px;
+    margin-inline-start: 8px;
+    opacity: 0.5;
+    transition: opacity 0.1s linear;
+}
+
+.weapon-icon.primary {
+    max-height: 22px;
+    max-width: 72px;
 }
 
 .weapon-icon.active {

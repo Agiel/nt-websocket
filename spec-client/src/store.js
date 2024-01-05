@@ -124,7 +124,7 @@ const weapon_type = {
     grenade: "utility",
     jitte: "primary",
     jittescoped: "primary",
-    knife: "knife",
+    knife: "t_knife",
     kyla: "secondary",
     m41: "primary",
     m41s: "primary",
@@ -145,7 +145,7 @@ const weapon_type = {
     tachi: "secondary",
     zr68c: "primary",
     zr68l: "primary",
-    zr68: "primary",
+    zr68s: "primary",
 };
 
 function decodeWeaponBits(bits) {
@@ -163,7 +163,7 @@ function decodeWeaponBits(bits) {
 }
 
 export function getWeaponType(weapon) {
-    return weapon_type[weapon];
+    return weapon_type[weapon] ?? '';
 }
 
 async function handleMessage(data) {
