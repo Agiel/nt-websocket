@@ -1,42 +1,26 @@
 <template>
     <div class="panel-container flex">
-        <div
-            class="player-panel flex"
-            :class="{
-                'dead-flash': !data.isAlive && !data.isSpawning,
-                highlight: highlight,
-            }"
-        >
+        <div class="player-panel flex" :class="{
+            'dead-flash': !data.isAlive && !data.isSpawning,
+            highlight: highlight,
+        }">
             <div class="avatar-container flex">
-                <div
-                    class="avatar"
-                    :class="{ dead: !data.isAlive && !data.isSpawning }"
-                    :style="{ 'background-image': 'url(' + data.avatar + ')' }"
-                ></div>
-                <img
-                    class="dead-icon"
-                    src="icons/dead.svg"
-                    v-if="!data.isAlive && !data.isSpawning"
-                />
+                <div class="avatar" :class="{ dead: !data.isAlive && !data.isSpawning }"
+                    :style="{ 'background-image': 'url(' + data.avatar + ')' }"></div>
+                <img class="dead-icon" src="icons/dead.svg" v-if="!data.isAlive && !data.isSpawning" />
+                <div class="health">{{ health }}</div>
+                <div class="round-kills align" v-if="data.roundKills > 0">{{ 'x' + data.roundKills }}</div>
             </div>
             <div class="info flex">
                 <div class="health-bar-container flex">
-                    <div
-                        class="health-bar health-bar-dmg"
-                        :style="{ width: data.health + '%' }"
-                        v-if="!data.isSpawning"
-                    ></div>
+                    <div class="health-bar health-bar-dmg" :style="{ width: data.health + '%' }" v-if="!data.isSpawning">
+                    </div>
                 </div>
                 <div class="health-bar-container flex">
-                    <div
-                        class="health-bar bg-color"
-                        :style="{ width: data.health + '%' }"
-                        v-if="data.isAlive"
-                    ></div>
+                    <div class="health-bar bg-color" :style="{ width: data.health + '%' }" v-if="data.isAlive"></div>
                 </div>
                 <div class="name">{{ data.name }}</div>
                 <div class="class">{{ className }}</div>
-                <div class="health align">{{ health }}</div>
 
                 <div class="break"></div>
                 <div class="stats">
@@ -51,21 +35,15 @@
                 </div>
                 <div class="spacer"></div>
                 <div class="weapons-container align" v-if="data.isAlive">
-                    <img v-for="weapon in equippedWeapons" :key="weapon"
-                        class="weapon-icon"
-                        :class="{[getWeaponType(weapon)]: true, active: data.activeWeapon === weapon}"
-                        :src="'icons/' + weapon + '.svg'"
-                    />
+                    <img v-for="weapon in equippedWeapons" :key="weapon" class="weapon-icon"
+                        :class="{ [getWeaponType(weapon)]: true, active: data.activeWeapon === weapon }"
+                        :src="'icons/' + weapon + '.svg'" />
                 </div>
             </div>
         </div>
         <div class="muzzleflash" :class="{ firing: data.isFiring }"></div>
-        <img
-            class="ghost"
-            :class="{ active: data.activeWeapon === 'ghost'}"
-            v-if="data.isAlive && hasGhost"
-            :src="'icons/ghost.svg'"
-        />
+        <img class="ghost" :class="{ active: data.activeWeapon === 'ghost' }" v-if="data.isAlive && hasGhost"
+            :src="'icons/ghost.svg'" />
     </div>
 </template>
 
@@ -81,10 +59,8 @@ const props = defineProps({
 const health = computed(() => {
     if (props.data.isAlive) {
         return props.data.health;
-    } else if (props.data.isSpawning) {
-        return "";
     } else {
-        return "Dead";
+        return "";
     }
 });
 
@@ -116,12 +92,14 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 .player-panel {
     font-weight: bold;
     margin: 2px 0;
-    padding: 2px;
-    width: 420px;
+    /* padding: 2px; */
+    width: 350px;
     color: white;
     text-shadow: 1px 1px 2px #222;
     background-color: rgba(0, 0, 0, 0.5);
     box-sizing: border-box;
+    border-radius: 4px;
+    overflow: hidden;
 }
 
 .player-panel.highlight {
@@ -139,6 +117,7 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 }
 
 .avatar-container {
+    position: relative;
     display: flex;
     flex: 0 0 auto;
     height: 64px;
@@ -148,6 +127,7 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 .avatar {
     width: 64px;
     height: 64px;
+    border-radius: 4px;
 }
 
 .dead {
@@ -167,6 +147,7 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    min-width: 0;
     box-sizing: border-box;
     padding: 4px 10px;
     position: relative;
@@ -174,7 +155,7 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 }
 
 .name {
-    font-size: 15px;
+    font-size: 14px;
     flex: 1 0 160px;
     white-space: nowrap;
     overflow: hidden;
@@ -182,18 +163,28 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 }
 
 .class {
-    width: 50px;
-    font-size: 12px;
+    font-size: 11px;
     color: #ddd;
-    align-self: flex-end;
-    padding-bottom: 3px;
     text-align: center;
 }
 
 .health {
-    width: 50px;
-    color: #eee;
-    text-align: center;
+    position: absolute;
+    bottom: 2px;
+    padding-inline: 2px;
+    width: 100%;
+    /* text-align: center; */
+    text-shadow: 0 0 4px black;
+}
+
+.round-kills {
+    box-sizing: border-box;
+    z-index: 101;
+    position: absolute;
+    top: 2px;
+    padding-inline: 2px;
+    width: 100%;
+    text-shadow: 0 0 4px black;
 }
 
 .health-bar-container {
@@ -220,7 +211,7 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 
 .stats {
     display: flex;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 22px;
     align-self: flex-end;
     align-items: center;
@@ -230,24 +221,20 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 22px;
-    width: 22px;
-    margin-right: 8px;
+    height: 16px;
+    width: 16px;
+    margin-right: 6px;
 }
 
 .xp-icon,
 .deaths-icon {
-    max-height: 22px;
-    max-width: 22px;
-}
-
-.deaths-icon {
-    max-height: 18px;
+    max-height: 16px;
+    max-width: 16px;
 }
 
 .xp,
 .deaths {
-    width: 24px;
+    width: 18px;
     text-align: left;
     color: #ccc;
 }
@@ -256,25 +243,26 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
     margin-right: 14px;
 }
 
-.weapon {
-    font-size: 12px;
-    color: #ccc;
+.weapons-container {
+    width: 166px;
+    margin-inline: -4px;
+    white-space: nowrap;
 }
 
 .weapon-icon {
     box-sizing: border-box;
-    max-height: 16px;
+    max-height: 12px;
     max-width: 36px;
     position: relative;
     top: 4px;
-    margin-inline-start: 8px;
+    margin-inline-start: 6px;
     opacity: 0.5;
     transition: opacity 0.1s linear;
 }
 
 .weapon-icon.primary {
     max-height: 22px;
-    max-width: 72px;
+    max-width: 64px;
 }
 
 .weapon-icon.active {
@@ -283,11 +271,12 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 
 .muzzleflash {
     margin: 2px 0;
-    border: solid 2px black;
+    border: solid 1px black;
     width: 2px;
     opacity: 0;
     background-color: white;
     transition: opacity 1s ease-out;
+    box-shadow: 0 0 3px 0 white;
 }
 
 .muzzleflash.firing {
@@ -308,6 +297,7 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
     0% {
         background-color: rgba(255, 0, 0, 0.5);
     }
+
     100% {
         background-color: rgba(24, 0, 0, 0.5);
     }

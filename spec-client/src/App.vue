@@ -4,26 +4,20 @@
         <TeamInfo></TeamInfo>
         <div id="round-info">
             <div id="round-counter">Round {{ store.roundNumber }}</div>
-            <div id="round-timer" :class="{ glitch: store.ghostOvertime, layers: store.ghostOvertime }" :data-text="roundTimeLeft">{{ roundTimeLeft }}</div>
-            <div id="round-overtime" class="glitch layers" :hidden="!store.ghostOvertime" data-text="Overtime">Overtime</div>
+            <div id="round-timer" :class="{ glitch: store.ghostOvertime, layers: store.ghostOvertime }"
+                :data-text="roundTimeLeft">{{ roundTimeLeft }}</div>
+            <div id="round-overtime" class="glitch layers" :hidden="!store.ghostOvertime" data-text="Overtime">Overtime
+            </div>
         </div>
         <div id="container">
             <div class="players jinrai">
-                <PlayerPanel
-                    v-for="player in jinrai"
-                    :data="player"
-                    :key="player.userId"
-                    :highlight="player.clientId == store.observerTarget"
-                ></PlayerPanel>
+                <PlayerPanel v-for="player in jinrai" :data="player" :key="player.userId"
+                    :highlight="player.clientId == store.observerTarget"></PlayerPanel>
             </div>
             <div id="spacer"></div>
             <div class="players nsf">
-                <PlayerPanel
-                    v-for="player in nsf"
-                    :data="player"
-                    :key="player.userId"
-                    :highlight="player.clientId == store.observerTarget"
-                ></PlayerPanel>
+                <PlayerPanel v-for="player in nsf" :data="player" :key="player.userId"
+                    :highlight="player.clientId == store.observerTarget"></PlayerPanel>
             </div>
         </div>
         <VetoProgress></VetoProgress>
@@ -110,11 +104,9 @@ body {
 .jinrai .bg-color {
     /* background-color: rgba(154, 255, 154, 0.8); */
     /* background-color: rgba(120, 180, 120, 0.8); */
-    background: linear-gradient(
-        90deg,
-        rgba(120, 180, 120, 1),
-        rgba(154, 255, 154, 1)
-    );
+    background: linear-gradient(90deg,
+            rgba(120, 180, 120, 1),
+            rgba(154, 255, 154, 1));
 }
 
 .nsf {
@@ -138,6 +130,7 @@ body {
 }
 
 .nsf .weapons-container {
+    text-align: right;
     transform: scaleX(-1);
 }
 

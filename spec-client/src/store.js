@@ -186,6 +186,7 @@ async function handleMessage(data) {
                 isAlive: !!+parts[4],
                 isSpawning: false,
                 xp: parts[5],
+                roundKills: 0,
                 deaths: parts[6],
                 health: parts[7],
                 class: CLASSES[parts[8]],
@@ -265,6 +266,9 @@ async function handleMessage(data) {
             player.activeWeapon = "";
             player.equippedWeapons.clear();
 
+            const attacker = uidToPlayer[parts[1]];
+            attacker.roundKills += 1;
+
             break;
         }
         // * L: List of veto maps that are used for vetos
@@ -320,6 +324,7 @@ async function handleMessage(data) {
                 player.health = 0;
                 player.activeWeapon = "";
                 player.equippedWeapons.clear();
+                player.roundKills = 0;
             });
 
             break;
