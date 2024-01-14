@@ -103,8 +103,7 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 }
 
 .player-panel.highlight {
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    padding: 0;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
 }
 
 .break {
@@ -164,7 +163,6 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 
 .class {
     font-size: 11px;
-    color: #ddd;
     text-align: center;
 }
 
@@ -173,8 +171,6 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
     bottom: 2px;
     padding-inline: 2px;
     width: 100%;
-    /* text-align: center; */
-    text-shadow: 0 0 4px black;
 }
 
 .round-kills {
@@ -184,7 +180,16 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
     top: 2px;
     padding-inline: 2px;
     width: 100%;
-    text-shadow: 0 0 4px black;
+}
+
+.health,
+.round-kills {
+    text-shadow:
+        0 0 4px black,
+        1px 0 0 black,
+        0 1px 0 black,
+        -1px 0 0 black,
+        0 -1px 0 black;
 }
 
 .health-bar-container {
