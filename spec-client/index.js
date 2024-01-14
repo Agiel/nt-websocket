@@ -35,25 +35,27 @@ const overlayStateTemplate = {
 
 const serverMap = {};
 const serverList = [
-    ['bonAHNSa.com', '74.91.123.81', '27015', '12346'],
-    ['sweaty and tryhard', '185.107.96.11', '27015', '12346'],
-    ['baux.site', '159.69.19.20', '3331', '12346'],
-    ['Agiel\'s', '98.128.173.190', '27015', '12346'],
+    ['bonAHNSa.com', 'bon', '74.91.123.81', '27015', '12346'],
+    ['sweaty and tryhard', 'sweaty', '185.107.96.11', '27015', '12346'],
+    ['baux.site', 'baux', '159.69.19.20', '3331', '12346'],
+    ['dunno.uno', 'dunno', '159.69.19.20', '3331', '12346'],
+    // ['Agiel\'s', 'agiel', '98.128.173.190', '27015', '12346'],
 
 ].map((server) => {
     const serverInfo = {
         overlayState: {
             ...structuredClone(overlayStateTemplate),
             serverName: server[0],
-            serverAddress: `${server[1]}:${server[2]}`,
-            overlayAddress: `${server[1]}:${server[3]}`,
+            serverTag: server[1],
+            serverAddress: `${server[2]}:${server[3]}`,
+            overlayAddress: `${server[2]}:${server[4]}`,
         },
         wsServer: new ws.Server({
             noServer: true,
             clientTracking: true
         })
     };
-    serverMap[serverInfo.overlayState.overlayAddress] = serverInfo;
+    serverMap[serverInfo.overlayState.serverTag] = serverInfo;
     return serverInfo;
 });
 

@@ -233,7 +233,7 @@
                         const link = document.createElement('a');
                         const search = new URLSearchParams();
                         const location = new URL(window.location.href);
-                        location.search = new URLSearchParams({ server: server.overlayAddress });
+                        location.search = new URLSearchParams({ server: server.serverTag });
                         link.href = location.href;
                         link.innerText = server.serverName;
 
@@ -286,6 +286,7 @@
 
                     const overlayUrl = new URL(window.location);
                     overlayUrl.pathname = '/overlay';
+                    overlayUrl.search = new URLSearchParams({ server: state.overlayAddress });
                     overlayLink.href = overlayUrl.href;
                 };
 

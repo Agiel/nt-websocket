@@ -9,7 +9,7 @@
                     :style="{ 'background-image': 'url(' + data.avatar + ')' }"></div>
                 <img class="dead-icon" src="icons/dead.svg" v-if="!data.isAlive && !data.isSpawning" />
                 <div class="health">{{ health }}</div>
-                <div class="round-kills align" v-if="data.roundKills > 0">{{ 'x' + data.roundKills }}</div>
+                <div class="round-kills" v-if="data.roundKills > 0">{{ 'x' + data.roundKills }}</div>
             </div>
             <div class="info flex">
                 <div class="health-bar-container flex">

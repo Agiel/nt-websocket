@@ -34,8 +34,12 @@ export const store = reactive({
     currentMap: "",
     observerTarget: 0,
     showOverlay: false,
-    nsf: {},
-    jinrai: {},
+    nsf: {
+        logo: 'nsf.png',
+    },
+    jinrai: {
+        logo: 'jinrai.png',
+    },
     vetoStage: "Inactive",
     vetoFirst: "Jinrai",
     vetoSecond: "NSF",
@@ -253,8 +257,14 @@ async function handleMessage(data) {
         // * I: Initial child socket connect. Sends game and map
         case 'I': {
             console.log(`Connection to "${parts[4]}" established.`);
-            document.title = parts[4];
+            const serverName = parts[4];
+            document.title = serverName;
             store.currentMap = parts[1];
+
+            const match = serverName.match(/(bon|sweaty|baux|agiel|dunno)/i);
+            if (match != null) {
+                connectManager(match[1].toLowerCase());
+            }
 
             break;
         }
@@ -267,7 +277,9 @@ async function handleMessage(data) {
             player.equippedWeapons.clear();
 
             const attacker = uidToPlayer[parts[1]];
-            attacker.roundKills += 1;
+            if (player.team !== attacker.team) {
+                attacker.roundKills += 1;
+            }
 
             break;
         }
@@ -433,24 +445,11 @@ async function handleMessage(data) {
     // console.log(data);
 }
 
-export async function connect(ip) {
-    const connectWs = () => {
-        const ws = new WebSocket('ws://' + ip);
-        ws.addEventListener('message', event => handleMessage(event.data));
-        ws.addEventListener("close", async (event) => {
-            store.players = [];
-            if (!event.wasClean) {
-                console.log("Lost connection to game server. Retrying...");
-                connectWs();
-            }
-        });
-    };
-    connectWs();
-
+async function connectManager(serverId) {
     try {
         const localWs = process.env.NODE_ENV === 'development'
-            ? new WebSocket(`ws://${window.location.hostname}:3000/state/${ip}`)
-            : new WebSocket(`ws://${window.location.host}/state/${ip}`);
+            ? new WebSocket(`ws://${window.location.hostname}:3000/state/${serverId}`)
+            : new WebSocket(`ws://${window.location.host}/state/${serverId}`);
         localWs.addEventListener('message', event => {
             const state = JSON.parse(event.data);
             store.showOverlay = state.show;
@@ -464,8 +463,8 @@ export async function connect(ip) {
 
     try {
         const res = process.env.NODE_ENV === 'development'
-            ? await fetch(`http://${window.location.hostname}:3000/state/${ip}`)
-            : await fetch(`/state/${ip}`);
+            ? await fetch(`http://${window.location.hostname}:3000/state/${serverId}`)
+            : await fetch(`/state/${serverId}`);
         const state = await res.json();
         store.showOverlay = state.show;
         store.tournamentName = state.name;
@@ -474,7 +473,21 @@ export async function connect(ip) {
     } catch (e) {
         console.error("Error fetching match state", e);
     }
+}
 
+export async function connect(ip) {
+    const connectWs = () => {
+        const ws = new WebSocket('ws://' + ip);
+        ws.addEventListener('message', event => handleMessage(event.data));
+        ws.addEventListener("close", async (event) => {
+            store.players = [];
+            if (!event.wasClean) {
+                console.log("Lost connection to game server. Retrying...");
+                connectWs();
+            }
+        });
+    };
+    connectWs();
 }
 
 window.debug = {
