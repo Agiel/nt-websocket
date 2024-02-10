@@ -261,7 +261,7 @@ async function handleMessage(data) {
             document.title = serverName;
             store.currentMap = parts[1];
 
-            const match = serverName.match(/(bon|sweaty|baux|agiel|dunno)/i);
+            const match = serverName.match(/(hidden|sweaty|baux|agiel|dunno)/i);
             if (match != null) {
                 connectManager(match[1].toLowerCase());
             }

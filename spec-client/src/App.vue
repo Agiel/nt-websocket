@@ -50,10 +50,15 @@ const roundTimeLeft = computed(
 </script>
 
 <style>
+html {
+    height: 100%;
+}
+
 body {
     background-color: #222;
-    width: 1920px;
-    height: 1080px;
+    /* width: 1920px;
+    height: 1080px; */
+    height: 100%;
     margin: 0;
 }
 
@@ -138,7 +143,7 @@ body {
     position: absolute;
     left: 0;
     top: 0;
-    width: 1920px;
+    width: 100%;
     margin-top: 32px;
     font-family: xscale;
     font-size: 24px;

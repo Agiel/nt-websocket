@@ -5,8 +5,8 @@
             {{ props.score }}
         </div>
         <div class="maps-container">
-            <span class="score" :class="{filled: scoreSecond}">■</span>
-            <span class="score" :class="{filled: scoreFirst}">■</span>
+            <span class="score" :class="{ filled: scoreSecond }">■</span>
+            <span class="score" :class="{ filled: scoreFirst }">■</span>
         </div>
         <img class="logo" :src="'logos/' + team.logo" />
         <div class="name align">{{ team.name }}</div>
@@ -34,6 +34,7 @@ const scoreSecond = computed(() => (props.team.score > 1));
 .spacer {
     flex: 0 0 80px;
 }
+
 .name {
     flex: 0 0 auto;
     margin: 40px;
@@ -45,6 +46,7 @@ const scoreSecond = computed(() => (props.team.score > 1));
 
 .logo {
     height: 80px;
+    border-radius: 4px;
 }
 
 .score-container {

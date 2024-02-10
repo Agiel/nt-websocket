@@ -5,16 +5,8 @@
             <div class="mapname">
                 {{ store.currentMap }}
             </div>
-            <TeamPanel
-                class="jinrai"
-                :team="store.jinrai"
-                :score="store.jinraiScore"
-            ></TeamPanel>
-            <TeamPanel
-                class="nsf"
-                :team="store.nsf"
-                :score="store.nsfScore"
-            ></TeamPanel>
+            <TeamPanel class="jinrai" :team="store.jinrai" :score="store.jinraiScore"></TeamPanel>
+            <TeamPanel class="nsf" :team="store.nsf" :score="store.nsfScore"></TeamPanel>
         </div>
     </div>
 </template>
@@ -29,7 +21,7 @@ import { store } from "../store";
     position: absolute;
     top: 0;
     left: 0;
-    width: 1920px;
+    width: 100%;
     display: flex;
     overflow: hidden;
 }

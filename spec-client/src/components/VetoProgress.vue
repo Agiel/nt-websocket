@@ -3,32 +3,20 @@
         <div class="veto-progress-container">
             <div class="veto-stage">{{ title }}</div>
             <div class="veto-picks">
-                <div
-                    class="veto-pick-container"
-                    v-for="pick in store.vetoPicks"
-                    :key="pick.map"
-                    :class="pick.team.toLowerCase()"
-                >
+                <div class="veto-pick-container" v-for="pick in store.vetoPicks" :key="pick.map"
+                    :class="pick.team.toLowerCase()">
                     <span class="action" :class="pick.action.toLowerCase()">{{
                         getSymbol(pick)
                     }}</span>
-                    <span
-                        class="map"
-                        :class="[
-                            { finished: isFinished },
-                            pick.action.toLowerCase(),
-                        ]"
-                        >{{ pick.map }}</span
-                    >
+                    <span class="map" :class="[
+                                { finished: isFinished },
+                                pick.action.toLowerCase(),
+                            ]">{{ pick.map }}</span>
                     <span class="dummy"></span>
                 </div>
             </div>
             <div class="veto-pool">
-                <div
-                    v-for="map in store.vetoPool"
-                    :key="map"
-                    :class="{ finished: isFinished }"
-                >
+                <div v-for="map in store.vetoPool" :key="map" :class="{ finished: isFinished }">
                     {{ map }}
                 </div>
             </div>
@@ -73,7 +61,7 @@ const title = computed(() => {
 <style>
 .veto-progress {
     position: absolute;
-    width: 1920px;
+    width: 100%;
     left: 0;
     top: 250px;
     font-family: xscale;

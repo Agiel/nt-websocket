@@ -35,7 +35,7 @@ const overlayStateTemplate = {
 
 const serverMap = {};
 const serverList = [
-    ['bonAHNSa.com', 'bon', '74.91.123.81', '27015', '12346'],
+    ['bonAHNSa.com', 'hidden', '74.91.123.81', '27015', '12346'],
     ['sweaty and tryhard', 'sweaty', '185.107.96.11', '27015', '12346'],
     ['baux.site', 'baux', '159.69.19.20', '3331', '12346'],
     ['dunno.uno', 'dunno', '159.69.19.20', '3331', '12346'],
