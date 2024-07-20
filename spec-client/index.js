@@ -18,7 +18,7 @@ const avatarCache = {};
 
 const overlayStateTemplate = {
     show: true,
-    name: 'Winter Warzone 2024',
+    name: 'Summer Skirmish 2024',
     jinrai: {
         name: '',
         tag: 'Jinrai',
@@ -37,8 +37,8 @@ const serverMap = {};
 const serverList = [
     ['bonAHNSa.com', 'hidden', '74.91.123.81', '27015', '12346'],
     ['sweaty and tryhard', 'sweaty', '185.107.96.11', '27015', '12346'],
-    ['baux.site', 'baux', '159.69.19.20', '3331', '12346'],
-    ['dunno.uno', 'dunno', '159.69.19.20', '3331', '12346'],
+    ['baux.site', 'baux', '159.69.19.20', '1331', '12346'],
+    ['Bulletnauts', 'Bulletnauts', '94.130.231.245', '27017', '12346'],
     // ['Agiel\'s', 'agiel', '98.128.173.190', '27015', '12346'],
 
 ].map((server) => {
