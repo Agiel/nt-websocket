@@ -182,6 +182,11 @@ async function handleMessage(data) {
         }
         // * C: Player connected
         case 'C': {
+            // Hotfix for names containing ':'
+            if (parts.length > 12) {
+                parts[10] = parts.slice(10, -1).join(':');
+                parts[11] = parts[parts.length - 1];
+            }
             const player = reactive({
                 userId: parts[0],
                 clientId: parts[1],

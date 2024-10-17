@@ -40,7 +40,7 @@ import { store } from "../store";
     position: absolute;
     top: 0;
     right: -60px;
-    width: 530px;
+    width: 540px;
     height: 117px;
     background-image: linear-gradient(to left, black 80%, rgba(0, 0, 0, 0));
     transform: skew(45deg);
