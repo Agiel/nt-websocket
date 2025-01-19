@@ -186,10 +186,14 @@ const equippedWeapons = computed(() => [...props.data.equippedWeapons.values()].
 .round-kills {
     text-shadow:
         0 0 4px black,
-        1px 0 0 black,
-        0 1px 0 black,
-        -1px 0 0 black,
-        0 -1px 0 black;
+        -1px -1px 1px black,
+        0 -1px 1px black,
+        1px -1px 1px black,
+        -1px 0 1px black,
+        1px 0 1px black,
+        -1px 1px 1px black,
+        0 1px 1px black,
+        1px 1px 1px black;
 }
 
 .health-bar-container {
