@@ -59,8 +59,8 @@
 #include <sdkhooks>
 #include <websocket>
 #include <neotokyo>
-#include <nt_competitive_vetos_enum>
-#include <nt_competitive_vetos_natives>
+// #include <nt_competitive_vetos_enum>
+// #include <nt_competitive_vetos_natives>
 
 #define PLUGIN_VERSION "1.6.2"
 
@@ -87,10 +87,10 @@ int g_playerEquippedWeapons[NEO_MAX_CLIENTS + 1];
 int g_currentObserver = 0;
 int g_currentObserverTarget = 0;
 
-int g_roundTimeLeft = 0;
+// int g_roundTimeLeft = 0;
 
-bool g_ghostHeld = false;
-bool g_ghostOvertimeEngaged = false;
+// bool g_ghostHeld = false;
+// bool g_ghostOvertimeEngaged = false;
 
 #if NT_RELAY_DEBUG
 int g_maxFakeClients = 10;
@@ -167,7 +167,7 @@ public OnPluginStart()
 	HookEvent("player_changename", Event_OnChangeName);
 
 	// Neotokyo
-	HookEventEx("game_round_start", Event_OnRoundStart);
+	// HookEventEx("game_round_start", Event_OnRoundStart);
 
 	AddTempEntHook("Shotgun Shot", Hook_FireBullets);
 
@@ -200,59 +200,59 @@ public OnPluginEnd()
 		Websocket_Close(g_hListenSocket);
 }
 
-public OnGameFrame()
-{
-	int timeLeft = RoundToFloor(GameRules_GetPropFloat("m_fRoundTimeLeft"));
-	if (timeLeft != g_roundTimeLeft) {
-		g_roundTimeLeft = timeLeft;
-		char sBuffer[6];
-		Format(sBuffer,sizeof(sBuffer), "B%d", timeLeft);
-		SendToAllChildren(sBuffer);
-	}
+// public OnGameFrame()
+// {
+// 	int timeLeft = RoundToFloor(GameRules_GetPropFloat("m_fRoundTimeLeft"));
+// 	if (timeLeft != g_roundTimeLeft) {
+// 		g_roundTimeLeft = timeLeft;
+// 		char sBuffer[6];
+// 		Format(sBuffer,sizeof(sBuffer), "B%d", timeLeft);
+// 		SendToAllChildren(sBuffer);
+// 	}
 
-	int gameState = GameRules_GetProp("m_iGameState");
-	bool ghostOvertimeEngaged = gameState == GAMESTATE_ROUND_ACTIVE && timeLeft <= 15.0 && g_ghostHeld;
-	if (ghostOvertimeEngaged != g_ghostOvertimeEngaged)
-	{
-		g_ghostOvertimeEngaged = ghostOvertimeEngaged;
-		char sBuffer[3];
-		Format(sBuffer,sizeof(sBuffer), "G%d", g_ghostOvertimeEngaged);
-		SendToAllChildren(sBuffer);
-	}
-}
+// 	int gameState = GameRules_GetProp("m_iGameState");
+// 	bool ghostOvertimeEngaged = gameState == GAMESTATE_ROUND_ACTIVE && timeLeft <= 15.0 && g_ghostHeld;
+// 	if (ghostOvertimeEngaged != g_ghostOvertimeEngaged)
+// 	{
+// 		g_ghostOvertimeEngaged = ghostOvertimeEngaged;
+// 		char sBuffer[3];
+// 		Format(sBuffer,sizeof(sBuffer), "G%d", g_ghostOvertimeEngaged);
+// 		SendToAllChildren(sBuffer);
+// 	}
+// }
 
-public void OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
-{
-	// Send the full veto list during a coin flip
-	if (new_veto_stage == VETO_STAGE_COIN_FLIP) {
-		int veto_pool_size = CompetitiveVetos_GetVetoMapPoolSize();
-		if (veto_pool_size > 0) {
-			int buff_size = veto_pool_size * PLATFORM_MAX_PATH + veto_pool_size + 1;
-			char[] vetoListBuff = new char[buff_size];
-			int num_written = Format(vetoListBuff, buff_size, "L%d:", veto_pool_size);
-			char map_name[PLATFORM_MAX_PATH];
-			for (int i = 0; i < veto_pool_size; ++i) {
-				if (CompetitiveVetos_GetNameOfMapPoolMap(i, map_name, sizeof(map_name)) != 0) {
-					num_written += StrCat(vetoListBuff, buff_size, map_name);
-					num_written += StrCat(vetoListBuff, buff_size, ":");
-				}
-			}
-			vetoListBuff[num_written - 1] = '\0'; // Remove trailing delimiter
-			SendToAllChildren(vetoListBuff);
-		}
-	}
+// public void OnMapVetoStageUpdate(VetoStage new_veto_stage, int param2)
+// {
+// 	// Send the full veto list during a coin flip
+// 	if (new_veto_stage == VETO_STAGE_COIN_FLIP) {
+// 		int veto_pool_size = CompetitiveVetos_GetVetoMapPoolSize();
+// 		if (veto_pool_size > 0) {
+// 			int buff_size = veto_pool_size * PLATFORM_MAX_PATH + veto_pool_size + 1;
+// 			char[] vetoListBuff = new char[buff_size];
+// 			int num_written = Format(vetoListBuff, buff_size, "L%d:", veto_pool_size);
+// 			char map_name[PLATFORM_MAX_PATH];
+// 			for (int i = 0; i < veto_pool_size; ++i) {
+// 				if (CompetitiveVetos_GetNameOfMapPoolMap(i, map_name, sizeof(map_name)) != 0) {
+// 					num_written += StrCat(vetoListBuff, buff_size, map_name);
+// 					num_written += StrCat(vetoListBuff, buff_size, ":");
+// 				}
+// 			}
+// 			vetoListBuff[num_written - 1] = '\0'; // Remove trailing delimiter
+// 			SendToAllChildren(vetoListBuff);
+// 		}
+// 	}
 
-	char sBuffer[7];
-	Format(sBuffer, sizeof(sBuffer), "Y%d:%d", new_veto_stage, param2);
-	SendToAllChildren(sBuffer);
-}
+// 	char sBuffer[7];
+// 	Format(sBuffer, sizeof(sBuffer), "Y%d:%d", new_veto_stage, param2);
+// 	SendToAllChildren(sBuffer);
+// }
 
-public void OnMapVetoPick(VetoStage current_veto_stage, int vetoing_team, const char[] map_name)
-{
-	char sBuffer[6 + PLATFORM_MAX_PATH + 1];
-	Format(sBuffer, sizeof(sBuffer), "Z%d:%d:%s", current_veto_stage, vetoing_team, map_name);
-	SendToAllChildren(sBuffer);
-}
+// public void OnMapVetoPick(VetoStage current_veto_stage, int vetoing_team, const char[] map_name)
+// {
+// 	char sBuffer[6 + PLATFORM_MAX_PATH + 1];
+// 	Format(sBuffer, sizeof(sBuffer), "Z%d:%d:%s", current_veto_stage, vetoing_team, map_name);
+// 	SendToAllChildren(sBuffer);
+// }
 
 public Action OnSetObserver(int client, int args)
 {
@@ -582,27 +582,27 @@ public Event_OnPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 
 public Event_OnRoundStart(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	g_ghostHeld = false;
+	// g_ghostHeld = false;
 
 	new iSize = GetArraySize(g_hChildren);
 	if(iSize == 0)
 		return;
 
 	CreateTimer(0.1, CheckScores);
-	CreateTimer(0.1, SendTeamScores);
+	// CreateTimer(0.1, SendTeamScores);
 }
 
-public Action SendTeamScores(Handle timer)
-{
-	g_iRoundNumber = GameRules_GetProp("m_iRoundNumber");
-	int jinraiScore = GetTeamScore(TEAM_JINRAI);
-	int nsfScore = GetTeamScore(TEAM_NSF);
+// public Action SendTeamScores(Handle timer)
+// {
+// 	g_iRoundNumber = GameRules_GetProp("m_iRoundNumber");
+// 	int jinraiScore = GetTeamScore(TEAM_JINRAI);
+// 	int nsfScore = GetTeamScore(TEAM_NSF);
 
-	decl String:sBuffer[32];
-	Format(sBuffer, sizeof(sBuffer), "R%d:%d:%d", g_iRoundNumber, jinraiScore, nsfScore);
+// 	decl String:sBuffer[32];
+// 	Format(sBuffer, sizeof(sBuffer), "R%d:%d:%d", g_iRoundNumber, jinraiScore, nsfScore);
 
-	SendToAllChildren(sBuffer);
-}
+// 	SendToAllChildren(sBuffer);
+// }
 
 
 public Event_OnChangeName(Handle:event, const String:name[], bool:dontBroadcast)
@@ -697,7 +697,7 @@ public void Event_OnWeaponSwitch_Post(int client, int weapon)
 
 public void OnGhostPickUp(int client)
 {
-	g_ghostHeld = true;
+	// g_ghostHeld = true;
 
 	int userid = GetClientUserId(client);
 	g_playerEquippedWeapons[client] += GetWeaponBit("weapon_ghost");
@@ -711,7 +711,7 @@ public void OnGhostPickUp(int client)
 
 public void OnGhostDrop(int client)
 {
-	g_ghostHeld = false;
+	// g_ghostHeld = false;
 
 	int userid = GetClientUserId(client);
 	g_playerEquippedWeapons[client] -= GetWeaponBit("weapon_ghost");
