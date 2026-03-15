@@ -161,6 +161,9 @@ public OnPluginStart()
 
 public OnConfigsExecuted()
 {
+    if (g_hWsServer)
+        return;
+
     PrintToServer("WebSocket server running on port %d", g_wsPort.IntValue);
     g_hWsServer = new WebSocketServer("0.0.0.0", g_wsPort.IntValue);
     g_hWsServer.SetMessageCallback(OnSrvMessage);
@@ -289,17 +292,17 @@ Action CheckScores(Handle timer)
 	return Plugin_Stop;
 }
 
-public OnMapStart()
-{
-    if (!g_hWsServer.ClientsCount)
-        return;
+// public OnMapStart()
+// {
+//     if (!g_hWsServer.ClientsCount)
+//         return;
 
-	decl String:sBuffer[128];
-	GetCurrentMap(sBuffer, sizeof(sBuffer));
-	Format(sBuffer, sizeof(sBuffer), "M%s", sBuffer);
+// 	decl String:sBuffer[128];
+// 	GetCurrentMap(sBuffer, sizeof(sBuffer));
+// 	Format(sBuffer, sizeof(sBuffer), "M%s", sBuffer);
 
-	SendToAllChildren(sBuffer);
-}
+// 	SendToAllChildren(sBuffer);
+// }
 
 public OnClientPutInServer(client)
 {
