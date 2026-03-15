@@ -47,6 +47,7 @@
 #define PLUGIN_VERSION "2.0.0"
 
 #define NEO_MAX_CLIENTS 32
+#define MAX_PLAYER_NAME_LENGTH 32
 
 // If true, include the "sm_relaydbg" and "sm_relaydbg_populate" server commands for sending simulated relay data.
 #define NT_RELAY_DEBUG false
@@ -56,6 +57,7 @@
 WebSocketServer g_hWsServer;
 
 ConVar g_hostname;
+ConVar g_wsPort;
 
 int g_iRoundNumber = -1;
 
@@ -128,6 +130,8 @@ public OnPluginStart()
 
 	g_hostname = FindConVar("hostname");
 
+	g_wsPort = CreateConVar("sm_nt_websocket_port", "12346", "Port to use for the WebSocket server.", FCVAR_PROTECTED, true, 0.0, true, 65535.0);
+
 	RegConsoleCmd("sm_setobserver", OnSetObserver, "Set current observer for spectator overlay");
 	RegConsoleCmd("sm_setobserve", OnSetObserver, "Alias for sm_setobserver");
 #if NT_RELAY_DEBUG
@@ -139,7 +143,7 @@ public OnPluginStart()
 	HookEvent("player_death", Event_OnPlayerDeath);
 	HookEvent("player_spawn", Event_OnPlayerSpawn);
 	HookEvent("player_hurt", Event_OnPlayerHurt);
-	HookEvent("player_changename", Event_OnChangeName);
+	HookEvent("player_changeneoname", Event_OnChangeName);
 	HookEvent("round_start", Event_OnRoundStart);
 	HookEvent("team_score", Event_OnTeamScore);
 
@@ -151,11 +155,14 @@ public OnPluginStart()
 			OnClientPutInServer(client);
 		}
 	}
+
+	AutoExecConfig(true);
 }
 
-public OnAllPluginsLoaded()
+public OnConfigsExecuted()
 {
-    g_hWsServer = new WebSocketServer("0.0.0.0", 12346);
+    PrintToServer("WebSocket server running on port %d", g_wsPort.IntValue);
+    g_hWsServer = new WebSocketServer("0.0.0.0", g_wsPort.IntValue);
     g_hWsServer.SetMessageCallback(OnSrvMessage);
     g_hWsServer.SetOpenCallback(OnSrvOpen);
     g_hWsServer.SetCloseCallback(OnSrvClose);
@@ -215,7 +222,9 @@ void SendFullUpdate(const char[] RemoteId)
 		if(IsClientInGame(i))
 		{
 			GetClientAuthId(i, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
-			Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:%d:%d:%d:%d:%d:%s:%N:%d", GetClientUserId(i), i, sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientXP(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), g_playerActiveWeapon[i], i, g_playerEquippedWeapons[i]);
+			char name[MAX_PLAYER_NAME_LENGTH];
+			GetPlayerName(i, name);
+			Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:%d:%d:%d:%d:%d:%s:%s:%d", GetClientUserId(i), i, sBuffer, GetClientTeam(i), IsPlayerAlive(i), GetClientXP(i), GetClientDeaths(i), GetClientHealth(i), GetPlayerClass(i), g_playerActiveWeapon[i], name, g_playerEquippedWeapons[i]);
 
 			g_hWsServer.SendMessageToClient(RemoteId, sBuffer);
 		}
@@ -305,9 +314,12 @@ public OnClientPutInServer(client)
 	if (!g_hWsServer || !g_hWsServer.ClientsCount)
 	    return;
 
-	decl String:sBuffer[128];
+	char sBuffer[128];
 	GetClientAuthId(client, AuthId_SteamID64, sBuffer, sizeof(sBuffer));
-	Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:0:0:0:100:0::%N", GetClientUserId(client), client, sBuffer, GetClientTeam(client), client);
+
+	char name[MAX_PLAYER_NAME_LENGTH];
+	GetPlayerName(client, name);
+	Format(sBuffer, sizeof(sBuffer), "C%d:%d:%s:%d:0:0:0:100:0::%s", GetClientUserId(client), client, sBuffer, GetClientTeam(client), name);
 
 	SendToAllChildren(sBuffer);
 }
@@ -554,4 +566,13 @@ SendToAllChildren(const char[] sData)
 int GetClientXP(int i)
 {
     return GetEntProp(i, Prop_Send, "m_iXP");
+}
+
+void GetPlayerName(int i, char[] buffer)
+{
+    GetClientInfo(i, "neo_name", buffer, MAX_PLAYER_NAME_LENGTH);
+    if (!strlen(buffer))
+    {
+        GetClientInfo(i, "name", buffer, MAX_PLAYER_NAME_LENGTH);
+    }
 }

@@ -49,12 +49,6 @@ const jinrai = computed(() =>
 const nsf = computed(() =>
   players.value.filter((player) => player.team == "NSF").reverse()
 );
-// const roundTimeLeft = computed(
-//   () =>
-//     `${Math.floor(store.roundTimeLeft / 60)}:${String(
-//       store.roundTimeLeft % 60
-//     ).padStart(2, "0")}`
-// );
 </script>
 
 <style>
