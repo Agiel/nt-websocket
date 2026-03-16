@@ -267,9 +267,7 @@ async function handleMessage(data) {
       document.title = serverName;
       store.currentMap = parts[1];
 
-      const match = serverName.match(
-        /(bonahnsa|sweaty|baux|bulletnauts|eu|agiel)/i
-      );
+      const match = serverName.match(/(strongest|datasteal|dungeon|agiel)/i);
       if (match != null) {
         connectManager(match[1].toLowerCase());
       }

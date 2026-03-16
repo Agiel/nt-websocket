@@ -35,12 +35,10 @@ const overlayStateTemplate = {
 
 const serverMap = {};
 const serverList = [
-  ["BonAHNSa.com", "bonahnsa", "74.91.123.81", "27015", "12346"],
-  ["sweaty and tryhard", "sweaty", "185.107.96.11", "27015", "12346"],
-  ["baux.site", "baux", "159.69.19.20", "1331", "12346"],
-  ["Bulletnauts", "bulletnauts", "94.130.231.245", "27017", "12346"],
-  ["Public Comp EU #1", "eu", "188.40.73.246", "27016", "12346"],
-  ["Agiel's", "agiel", "98.128.173.190", "27015", "12346"],
+  ["Strongest Linux Server EU", "strongest", "baux.site", "27015", "12346"],
+  ["Datasteal.com #4", "datasteal", "nt.datasteal.com", "27015", "12346"],
+  ["Dungeon", "dungeon", "dragonmcave.duckdns.org", "27015", "12346"],
+  ["[DEBUG] Agiel's", "agiel", "98.128.173.190", "27015", "12346"],
 ].map((server) => {
   const serverInfo = {
     overlayState: {
