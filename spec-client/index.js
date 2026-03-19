@@ -36,8 +36,10 @@ const overlayStateTemplate = {
 const serverMap = {};
 const serverList = [
   ["Strongest Linux Server EU", "strongest", "baux.site", "27015", "12346"],
+  ["Regu-Powered: Rebuild EU", "regu", "51.79.249.217", "27015", "28000"],
   ["Datasteal.com #4", "datasteal", "nt.datasteal.com", "27015", "12346"],
-  ["Dungeon", "dungeon", "dragonmcave.duckdns.org", "27015", "12346"],
+  ["Dungeon #1", "dungeon", "dragonmcave.duckdns.org", "27015", "12346"],
+  ["Dungeon #2", "dungeon2", "dragonmcave.duckdns.org", "27015", "12347"],
   ["[DEBUG] Agiel's", "agiel", "98.128.173.190", "27015", "12346"],
 ].map((server) => {
   const serverInfo = {

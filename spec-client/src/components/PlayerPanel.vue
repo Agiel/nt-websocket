@@ -311,12 +311,9 @@ const equippedWeapons = computed(() => {
 }
 
 /* Temporarily make secondary and utility same size */
-.weapon-icon.secondary {
-  max-height: 22px;
-  max-width: 64px;
-}
-
-.weapon-icon.utility {
+.weapon-icon.secondary,
+.weapon-icon.utility,
+.weapon-icon.t_knife {
   max-height: 22px;
   max-width: 64px;
 }

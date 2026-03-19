@@ -263,13 +263,19 @@ async function handleMessage(data) {
     // * I: Initial child socket connect. Sends game and map
     case "I": {
       console.log(`Connection to "${parts[4]}" established.`);
-      const serverName = parts[4];
+      const serverName = parts.slice(4).join(":");
       document.title = serverName;
       store.currentMap = parts[1];
 
-      const match = serverName.match(/(strongest|datasteal|dungeon|agiel)/i);
+      const match = serverName.match(
+        /(strongest|regu|datasteal|dungeon|agiel)/i
+      );
       if (match != null) {
-        connectManager(match[1].toLowerCase());
+        let tag = match[0].toLowerCase();
+        if (tag === "dungeon" && serverName.match(/#2/)) {
+          tag += 2;
+        }
+        connectManager(tag);
       }
 
       break;

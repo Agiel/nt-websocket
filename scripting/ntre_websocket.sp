@@ -3,6 +3,7 @@
 // Changeolg
 
 // 2.0 - Major changes for NT;RE compatibility
+// 2.0.1 - Default class to recon to avoid desync
 
 // TODO:
 
@@ -44,7 +45,7 @@
 #include <websocket>
 #include <neotokyo>
 
-#define PLUGIN_VERSION "2.0.0"
+#define PLUGIN_VERSION "2.0.1"
 
 #define NEO_MAX_CLIENTS 32
 #define MAX_PLAYER_NAME_LENGTH 32
@@ -308,6 +309,7 @@ public OnClientPutInServer(client)
 {
 	g_playerXP[client] = GetClientXP(client);
 	g_playerDeaths[client] = GetClientDeaths(client);
+	g_playerClass[client] = 0;
 
 	SDKHook(client, SDKHook_WeaponSwitchPost, Event_OnWeaponSwitch_Post);
 	SDKHook(client, SDKHook_WeaponEquipPost, Event_OnWeaponEquip);

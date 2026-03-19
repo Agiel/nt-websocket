@@ -1,7 +1,7 @@
 <template>
   <div class="overlay">
-    <img class="overlay-image" src="../assets/overlay.png" />
-    <!-- <div class="tournament-name">{{ store.tournamentName }}</div> -->
+    <img class="game-logo" src="../assets/game_logo.png" />
+    <img class="tournament-logo" src="../assets/tournament_logo.png" />
   </div>
 </template>
 
@@ -10,19 +10,15 @@
 </script>
 
 <style scoped>
-.overlay {
+.game-logo {
   position: absolute;
-  top: 0;
   left: 0;
+  bottom: 0;
 }
 
-.tournament-name {
+.tournament-logo {
   position: absolute;
-  bottom: 28px;
-  left: 118px;
-  font-family: xscale;
-  font-size: 42px;
-  color: white;
-  opacity: 0.9;
+  right: 0;
+  bottom: 0;
 }
 </style>
